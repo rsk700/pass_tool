@@ -26,15 +26,14 @@ fn print_wrapped(prefix: &str, border: &str, text: &str) {
     let width = border.chars().count().max(prefix.chars().count());
     let text: Vec<char> = text.chars().collect();
     let text_width = terminal_width - width;
-    let mut cursor = text_width;
+    let mut cursor = 0;
     let mut tokens = vec![];
-    let cursor_end = |c: usize| c.min(text.len());
-    let first_line: String = text[0..cursor_end(cursor)].iter().collect();
+    let next_range = |c: usize| c..(c + text_width).min(text.len());
+    let first_line: String = text[next_range(cursor)].iter().collect();
     tokens.push(format!("{prefix:<width$}{first_line}"));
+    cursor += text_width;
     while cursor < text.len() {
-        let next_line: String = text[cursor..cursor_end(cursor + text_width)]
-            .iter()
-            .collect();
+        let next_line: String = text[next_range(cursor)].iter().collect();
         tokens.push(format!("{border:<width$}{next_line}"));
         cursor += text_width;
     }
