@@ -5,3 +5,35 @@ edition = "2021"
 
 [dependencies]
 terminal_size = "0.3.0"
+
+[[example]]
+name = "debug_action_already_applied"
+path = "examples/debug/debug_action_already_applied.rs"
+
+[[example]]
+name = "debug_apply_action"
+path = "examples/debug/debug_apply_action.rs"
+
+[[example]]
+name = "debug_confirm_all_no"
+path = "examples/debug/debug_confirm_all_no.rs"
+
+[[example]]
+name = "debug_confirm_mixed"
+path = "examples/debug/debug_confirm_mixed.rs"
+
+[[example]]
+name = "debug_empty"
+path = "examples/debug/debug_empty.rs"
+
+[[example]]
+name = "debug_env_fail"
+path = "examples/debug/debug_env_fail.rs"
+
+[[example]]
+name = "debug_env"
+path = "examples/debug/debug_env.rs"
+
+[[example]]
+name = "debug_long_name"
+path = "examples/debug/debug_long_name.rs"
