@@ -127,6 +127,7 @@ impl StoryFormatter {
     }
 
     // todo: use box-drawing characters?
+    // todo: add colors (if terminal supports)?
     pub fn checklist_item(&self, ok: bool, i: usize, title: &str) {
         let prefix = format!("|-[{:^3}] ", name_y_n(ok));
         let title = format!("{i}.{title}");
@@ -161,7 +162,13 @@ impl StoryFormatter {
     }
 
     pub fn playbook_result(header: &str, ok: bool) {
-        print!("\n{}\n\n {}\n\n", header, name_ok_fail(ok).to_uppercase());
+        println!();
+        print!("{}", header);
+        println!();
+        println!();
+        print!(" {}", name_ok_fail(ok).to_uppercase());
+        println!();
+        println!();
     }
 
     pub fn section_result(&mut self, ok: bool) {
