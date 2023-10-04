@@ -2,6 +2,7 @@ pub mod actions;
 pub mod checks;
 pub mod interfaces;
 pub mod playbook;
+pub mod process;
 mod story_formatter;
 
 pub use interfaces::{Action, ActionResult, Check};
