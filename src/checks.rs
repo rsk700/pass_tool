@@ -624,13 +624,17 @@ where
 /// Checks if service is enabled
 pub struct IsServiceEnabled {
     service: String,
+    is_enabled: bool,
 }
 
 impl IsServiceEnabled {
     const NAME: &'static str = "IsServiceEnabled";
 
-    pub fn new(service: String) -> Self {
-        Self { service }
+    pub fn new(service: String, is_enabled: bool) -> Self {
+        Self {
+            service,
+            is_enabled,
+        }
     }
 }
 
@@ -648,7 +652,12 @@ impl Check for IsServiceEnabled {
         if let Some(ProcessOutput { stdout, .. }) = result.output {
             let status = String::from_utf8(stdout).unwrap_or("".to_owned());
             let status = status.trim();
-            status == "enabled"
+            status
+                == if self.is_enabled {
+                    "enabled"
+                } else {
+                    "disabled"
+                }
         } else {
             false
         }
@@ -659,49 +668,20 @@ impl Check for IsServiceEnabled {
     }
 }
 
-/// init [IsServiceEnabled]
+/// init [IsServiceEnabled], checks if service enabled
 pub fn is_service_enabled<Service>(service: Service) -> Box<dyn Check>
 where
     Service: Into<String>,
 {
-    IsServiceEnabled::new(service.into()).as_check()
+    IsServiceEnabled::new(service.into(), true).as_check()
 }
 
-/// Checks if service is disabled
-pub struct IsServiceDisabled {
-    is_service_enabled: IsServiceEnabled,
-}
-
-impl IsServiceDisabled {
-    const NAME: &'static str = "IsServiceDisabled";
-
-    pub fn new(service: String) -> Self {
-        Self {
-            is_service_enabled: IsServiceEnabled::new(service),
-        }
-    }
-}
-
-impl Check for IsServiceDisabled {
-    fn name(&self) -> &str {
-        Self::NAME
-    }
-
-    fn yes(&self) -> bool {
-        !self.is_service_enabled.yes()
-    }
-
-    fn as_check(self) -> Box<dyn Check> {
-        Box::new(self)
-    }
-}
-
-/// init [IsServiceDisabled]
+/// init [IsServiceEnabled], checks if service disabled
 pub fn is_service_disabled<Service>(service: Service) -> Box<dyn Check>
 where
     Service: Into<String>,
 {
-    IsServiceDisabled::new(service.into()).as_check()
+    IsServiceEnabled::new(service.into(), false).as_check()
 }
 
 #[cfg(test)]
