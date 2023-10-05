@@ -1,6 +1,6 @@
 use pass_tool::{
     actions::do_nothing,
-    checks::{always_ok, named},
+    checks::{always_yes, named},
     instruction, Playbook,
 };
 
@@ -10,7 +10,7 @@ pub fn main() {
         "Playbook with long name check",
         [named(
             "Very long name of check aaaaaaaa bbbbbbbbbb dddddddddd aaaaaaaaaaa dddddddddd aaaaaaaa bbbbbbbbbb dddddddddd aaaaaaaaaaa dddddddddd aaaaaaaa bbbbbbbbbb dddddddddd aaaaaaaaaaa dddddddddd aaaaaaaa bbbbbbbbbb dddddddddd aaaaaaaaaaa dddddddddd aaaaaaaa bbbbbbbbbb dddddddddd aaaaaaaaaaa dddddddddd",
-            always_ok(),
+            always_yes(),
         )],
         [instruction(do_nothing())],
     );

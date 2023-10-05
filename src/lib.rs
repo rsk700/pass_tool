@@ -10,13 +10,13 @@ pub use playbook::{instruction, Playbook};
 
 #[cfg(test)]
 mod tests {
-    use crate::{actions::do_nothing, checks::always_ok, playbook::instruction, Playbook};
+    use crate::{actions::do_nothing, checks::always_yes, playbook::instruction, Playbook};
 
     #[test]
     fn test_instruction_syntax() {
         instruction(do_nothing())
-            .with_env(always_ok())
-            .confirm([always_ok(), always_ok()]);
+            .with_env(always_yes())
+            .confirm([always_yes(), always_yes()]);
     }
 
     #[test]
@@ -24,14 +24,14 @@ mod tests {
         Playbook::new(
             "empty-playbook",
             "Playbook description",
-            [always_ok(), always_ok()],
+            [always_yes(), always_yes()],
             [
                 instruction(do_nothing())
-                    .with_env(always_ok())
-                    .confirm([always_ok(), always_ok()]),
+                    .with_env(always_yes())
+                    .confirm([always_yes(), always_yes()]),
                 instruction(do_nothing())
-                    .with_env(always_ok())
-                    .confirm(always_ok()),
+                    .with_env(always_yes())
+                    .confirm(always_yes()),
             ],
         );
     }

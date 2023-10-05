@@ -1,10 +1,10 @@
-use pass_tool::{checks::always_ok, Playbook};
+use pass_tool::{checks::always_yes, Playbook};
 
 pub fn main() {
     let playbook = Playbook::new(
         "env_checks",
         "Playbook with environment checks",
-        [always_ok(), always_ok(), always_ok()],
+        [always_yes(), always_yes(), always_yes()],
         [],
     );
     assert!(playbook.apply().ok());

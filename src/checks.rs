@@ -7,13 +7,13 @@ use nix::unistd::Uid;
 use std::{fs::OpenOptions, path::PathBuf};
 
 /// Check which always succeed
-pub struct AlwaysOk;
+pub struct AlwaysYes;
 
-impl AlwaysOk {
-    const NAME: &'static str = "AlwaysOk";
+impl AlwaysYes {
+    const NAME: &'static str = "AlwaysYes";
 }
 
-impl Check for AlwaysOk {
+impl Check for AlwaysYes {
     fn name(&self) -> &str {
         Self::NAME
     }
@@ -27,19 +27,19 @@ impl Check for AlwaysOk {
     }
 }
 
-/// init [AlwaysOk]
-pub fn always_ok() -> Box<dyn Check> {
-    AlwaysOk.into_check()
+/// init [AlwaysYes]
+pub fn always_yes() -> Box<dyn Check> {
+    AlwaysYes.into_check()
 }
 
-/// Check which always fails
-pub struct AlwaysFail;
+/// Check which always negative
+pub struct AlwaysNo;
 
-impl AlwaysFail {
-    const NAME: &'static str = "AlwaysFail";
+impl AlwaysNo {
+    const NAME: &'static str = "AlwaysNo";
 }
 
-impl Check for AlwaysFail {
+impl Check for AlwaysNo {
     fn name(&self) -> &str {
         Self::NAME
     }
@@ -53,9 +53,9 @@ impl Check for AlwaysFail {
     }
 }
 
-/// init [AlwaysFail]
-pub fn always_fail() -> Box<dyn Check> {
-    AlwaysFail.into_check()
+/// init [AlwaysNo]
+pub fn always_no() -> Box<dyn Check> {
+    AlwaysNo.into_check()
 }
 
 /// Check which allows to rename another check
@@ -321,12 +321,11 @@ impl Check for OrOp {
     }
 
     fn yes(&self) -> bool {
-        for c in &self.checks {
-            if c.yes() {
-                return true;
-            }
+        if self.checks.is_empty() {
+            true
+        } else {
+            self.checks.iter().any(|c| c.yes())
         }
-        false
     }
 
     fn into_check(self) -> Box<dyn Check> {
@@ -687,19 +686,139 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
+    use std::path::Path;
+
+    const NOT_A_FILE: &str = "/tmp/not-a-pass-test-file-5555555555";
+
+    fn create_test_file(name: &str) -> String {
+        let path = format!("/tmp/pass-test-file-111222333-{}", name);
+        std::fs::write(&path, "aaabbbccc").unwrap();
+        path
+    }
+
+    fn delete_test_file<P>(path: P)
+    where
+        P: AsRef<Path>,
+    {
+        std::fs::remove_file(path).unwrap();
+    }
 
     #[test]
-    fn test_checks() {
-        assert!(always_ok().yes());
-        assert!(!always_fail().yes());
+    fn test_always_yes() {
+        assert!(always_yes().yes());
+    }
+
+    #[test]
+    fn test_always_no() {
+        assert!(always_yes().yes());
     }
 
     #[test]
     fn test_named() {
-        let c = named("aaa", always_ok());
+        let c = named("aaa", always_yes());
         assert_eq!(c.name(), "aaa");
         assert!(c.yes());
-        let c = named("aaa", always_fail());
+        let c = named("aaa", always_no());
         assert!(!c.yes());
+    }
+
+    #[test]
+    fn test_user_is_root() {
+        // use `test_user_is_root` example for manual testing
+    }
+
+    #[test]
+    fn test_is_file() {
+        let path = create_test_file("is_file");
+        assert!(is_file(&path).yes());
+        delete_test_file(path);
+        assert!(!is_file(NOT_A_FILE).yes());
+        assert!(!is_file("/tmp").yes());
+    }
+
+    #[test]
+    fn test_is_dir() {
+        let path = create_test_file("is_dir");
+        assert!(!is_dir(&path).yes());
+        delete_test_file(path);
+        assert!(is_dir("/tmp").yes());
+        assert!(!is_dir("/tmp111111111111111").yes());
+    }
+
+    #[test]
+    fn test_can_read() {
+        let path = create_test_file("can_read");
+        assert!(can_read(&path).yes());
+        delete_test_file(path);
+        assert!(!can_read(NOT_A_FILE).yes());
+    }
+
+    #[test]
+    fn test_can_write() {
+        let path = create_test_file("can_write");
+        assert!(can_write(&path).yes());
+        delete_test_file(path);
+        assert!(!can_write(NOT_A_FILE).yes());
+    }
+
+    #[test]
+    fn test_not_op() {
+        assert!(!not_op(always_yes()).yes());
+    }
+
+    #[test]
+    fn test_or_op() {
+        assert!(or_op([]).yes());
+        assert!(or_op([always_yes(), always_yes()]).yes());
+        assert!(or_op([always_yes(), always_no()]).yes());
+        assert!(!or_op([always_no(), always_no()]).yes());
+    }
+
+    #[test]
+    fn test_and_op() {
+        assert!(and_op([]).yes());
+        assert!(and_op([always_yes(), always_yes()]).yes());
+        assert!(!and_op([always_yes(), always_no()]).yes());
+        assert!(!and_op([always_no(), always_no()]).yes());
+    }
+
+    #[test]
+    fn test_stdout_contains_once() {
+        assert!(stdout_contains_once(["echo", "111222333"], "23").yes());
+        assert!(!stdout_contains_once(["echo", "1112222"], "22").yes());
+        assert!(!stdout_contains_once(["echo", "1112222"], "44").yes());
+    }
+
+    #[test]
+    fn test_stderr_contains_once() {
+        assert!(stderr_contains_once(["ls", NOT_A_FILE], "cannot access").yes());
+        assert!(!stderr_contains_once(["ls", NOT_A_FILE], "c").yes());
+        assert!(!stderr_contains_once(["ls", NOT_A_FILE], "11111111111111111").yes());
+    }
+
+    #[test]
+    fn test_is_file_content() {
+        let path = create_test_file("is_file_content");
+        assert!(is_file_content(&path, "aaabbbccc").yes());
+        assert!(!is_file_content(&path, "111").yes());
+        delete_test_file(&path);
+    }
+
+    #[test]
+    fn test_file_contains_once() {
+        let path = create_test_file("file_contains_once");
+        assert!(file_contains_once(&path, "bbb").yes());
+        assert!(!file_contains_once(&path, "b").yes());
+        delete_test_file(&path);
+    }
+
+    #[test]
+    fn test_is_service_status() {
+        // use `test_is_service_status` example for manual testing
+    }
+
+    #[test]
+    fn test_is_service_enabled() {
+        // use `test_is_service_enabled` example for manual testing
     }
 }

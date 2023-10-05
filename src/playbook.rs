@@ -211,7 +211,7 @@ impl Playbook {
 mod tests {
     use crate::{
         actions::do_nothing,
-        checks::{always_fail, always_ok},
+        checks::{always_no, always_yes},
     };
 
     use super::*;
@@ -220,15 +220,15 @@ mod tests {
     #[test]
     fn test_playbook() {
         assert!(Playbook::new("empty", "", [], []).apply().ok());
-        assert!(Playbook::new("env-ok", "", [always_ok()], []).apply().ok());
-        assert!(!Playbook::new("env-fail", "", [always_fail()], [])
+        assert!(Playbook::new("env-ok", "", [always_yes()], []).apply().ok());
+        assert!(!Playbook::new("env-fail", "", [always_no()], [])
             .apply()
             .ok());
         assert!(Playbook::new(
             "action-env-ok",
             "",
             [],
-            [instruction(do_nothing()).with_env([always_ok()])]
+            [instruction(do_nothing()).with_env([always_yes()])]
         )
         .apply()
         .ok());
@@ -236,7 +236,7 @@ mod tests {
             "action-env-fail",
             "",
             [],
-            [instruction(do_nothing()).with_env([always_fail()])]
+            [instruction(do_nothing()).with_env([always_no()])]
         )
         .apply()
         .ok());

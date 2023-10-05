@@ -38,3 +38,15 @@ path = "examples/debug/debug_env.rs"
 [[example]]
 name = "debug_long_name"
 path = "examples/debug/debug_long_name.rs"
+
+[[example]]
+name = "test_user_is_root"
+path = "examples/tests/test_user_is_root.rs"
+
+[[example]]
+name = "test_is_service_status"
+path = "examples/tests/test_is_service_status.rs"
+
+[[example]]
+name = "test_is_service_enabled"
+path = "examples/tests/test_is_service_enabled.rs"
