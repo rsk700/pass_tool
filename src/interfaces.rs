@@ -4,7 +4,7 @@ pub trait Check {
     /// Performs check and returns [true] in case of success, [false] - if check
     /// negative or failed (eg. have not enough permission to perform check)
     fn yes(&self) -> bool;
-    fn as_check(self) -> Box<dyn Check>;
+    fn into_check(self) -> Box<dyn Check>;
 }
 
 impl From<Box<dyn Check>> for Vec<Box<dyn Check>> {
@@ -42,7 +42,7 @@ pub trait Action {
     fn name(&self) -> &str;
     /// Run action, return status if it succeed or failed
     fn run(&self) -> ActionResult;
-    fn as_action(self) -> Box<dyn Action>;
+    fn into_action(self) -> Box<dyn Action>;
 }
 
 impl From<Box<dyn Action>> for Vec<Box<dyn Action>> {

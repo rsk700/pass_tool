@@ -22,14 +22,14 @@ impl Check for AlwaysOk {
         true
     }
 
-    fn as_check(self) -> Box<dyn Check> {
+    fn into_check(self) -> Box<dyn Check> {
         Box::new(self)
     }
 }
 
 /// init [AlwaysOk]
 pub fn always_ok() -> Box<dyn Check> {
-    AlwaysOk.as_check()
+    AlwaysOk.into_check()
 }
 
 /// Check which always fails
@@ -48,14 +48,14 @@ impl Check for AlwaysFail {
         false
     }
 
-    fn as_check(self) -> Box<dyn Check> {
+    fn into_check(self) -> Box<dyn Check> {
         Box::new(self)
     }
 }
 
 /// init [AlwaysFail]
 pub fn always_fail() -> Box<dyn Check> {
-    AlwaysFail.as_check()
+    AlwaysFail.into_check()
 }
 
 /// Check which allows to rename another check
@@ -79,7 +79,7 @@ impl Check for Named {
         self.check.yes()
     }
 
-    fn as_check(self) -> Box<dyn Check> {
+    fn into_check(self) -> Box<dyn Check> {
         Box::new(self)
     }
 }
@@ -89,7 +89,7 @@ pub fn named<Name>(name: Name, check: Box<dyn Check>) -> Box<dyn Check>
 where
     Name: Into<String>,
 {
-    Named::new(name.into(), check).as_check()
+    Named::new(name.into(), check).into_check()
 }
 
 /// Checks if current user is root
@@ -107,14 +107,14 @@ impl Check for UserIsRoot {
     fn yes(&self) -> bool {
         Uid::effective().is_root()
     }
-    fn as_check(self) -> Box<dyn Check> {
+    fn into_check(self) -> Box<dyn Check> {
         Box::new(self)
     }
 }
 
 /// init [UserIsRoot]
 pub fn user_is_root() -> Box<dyn Check> {
-    UserIsRoot.as_check()
+    UserIsRoot.into_check()
 }
 
 /// Checks if provided path is a file, does not test if file can be read/written
@@ -143,7 +143,7 @@ impl Check for IsFile {
         }
     }
 
-    fn as_check(self) -> Box<dyn Check> {
+    fn into_check(self) -> Box<dyn Check> {
         Box::new(self)
     }
 }
@@ -153,7 +153,7 @@ pub fn is_file<FilePath>(path: FilePath) -> Box<dyn Check>
 where
     FilePath: Into<PathBuf>,
 {
-    IsFile::new(path.into()).as_check()
+    IsFile::new(path.into()).into_check()
 }
 
 /// Checks if provided path is a directory
@@ -182,7 +182,7 @@ impl Check for IsDir {
         }
     }
 
-    fn as_check(self) -> Box<dyn Check> {
+    fn into_check(self) -> Box<dyn Check> {
         Box::new(self)
     }
 }
@@ -192,7 +192,7 @@ pub fn is_dir<FilePath>(path: FilePath) -> Box<dyn Check>
 where
     FilePath: Into<PathBuf>,
 {
-    IsDir::new(path.into()).as_check()
+    IsDir::new(path.into()).into_check()
 }
 
 /// Checks if can read provided path
@@ -217,7 +217,7 @@ impl Check for CanRead {
         std::fs::File::open(&self.path).is_ok()
     }
 
-    fn as_check(self) -> Box<dyn Check> {
+    fn into_check(self) -> Box<dyn Check> {
         Box::new(self)
     }
 }
@@ -227,7 +227,7 @@ pub fn can_read<FilePath>(path: FilePath) -> Box<dyn Check>
 where
     FilePath: Into<PathBuf>,
 {
-    CanRead::new(path.into()).as_check()
+    CanRead::new(path.into()).into_check()
 }
 
 /// Checks if can write provided path
@@ -257,7 +257,7 @@ impl Check for CanWrite {
             .is_ok()
     }
 
-    fn as_check(self) -> Box<dyn Check> {
+    fn into_check(self) -> Box<dyn Check> {
         Box::new(self)
     }
 }
@@ -267,7 +267,7 @@ pub fn can_write<FilePath>(path: FilePath) -> Box<dyn Check>
 where
     FilePath: Into<PathBuf>,
 {
-    CanWrite::new(path.into()).as_check()
+    CanWrite::new(path.into()).into_check()
 }
 
 /// Negates another check
@@ -292,14 +292,14 @@ impl Check for NotOp {
         !self.check.yes()
     }
 
-    fn as_check(self) -> Box<dyn Check> {
+    fn into_check(self) -> Box<dyn Check> {
         Box::new(self)
     }
 }
 
 /// init [NotOp]
 pub fn not_op(check: Box<dyn Check>) -> Box<dyn Check> {
-    NotOp::new(check).as_check()
+    NotOp::new(check).into_check()
 }
 
 /// Checks if any of provided checks succeed
@@ -329,7 +329,7 @@ impl Check for OrOp {
         false
     }
 
-    fn as_check(self) -> Box<dyn Check> {
+    fn into_check(self) -> Box<dyn Check> {
         Box::new(self)
     }
 }
@@ -339,7 +339,7 @@ pub fn or_op<Checks>(checks: Checks) -> Box<dyn Check>
 where
     Checks: Into<Vec<Box<dyn Check>>>,
 {
-    OrOp::new(checks.into()).as_check()
+    OrOp::new(checks.into()).into_check()
 }
 
 /// Checks if all provided checks succeed
@@ -364,7 +364,7 @@ impl Check for AndOp {
         self.checks.iter().all(|c| c.yes())
     }
 
-    fn as_check(self) -> Box<dyn Check> {
+    fn into_check(self) -> Box<dyn Check> {
         Box::new(self)
     }
 }
@@ -374,7 +374,7 @@ pub fn and_op<Checks>(checks: Checks) -> Box<dyn Check>
 where
     Checks: Into<Vec<Box<dyn Check>>>,
 {
-    AndOp::new(checks.into()).as_check()
+    AndOp::new(checks.into()).into_check()
 }
 
 /// Checks if stdout output of command contains provided data exactly once
@@ -405,7 +405,7 @@ impl Check for StdoutContainsOnce {
         }
     }
 
-    fn as_check(self) -> Box<dyn Check> {
+    fn into_check(self) -> Box<dyn Check> {
         Box::new(self)
     }
 }
@@ -417,7 +417,7 @@ where
     Cmd: Into<Vec<Arg>>,
     Data: Into<Vec<u8>>,
 {
-    StdoutContainsOnce::new(norm_cmd(cmd), data.into()).as_check()
+    StdoutContainsOnce::new(norm_cmd(cmd), data.into()).into_check()
 }
 
 /// Checks if stderr output of command contains provided data exactly once
@@ -448,7 +448,7 @@ impl Check for StderrContainsOnce {
         }
     }
 
-    fn as_check(self) -> Box<dyn Check> {
+    fn into_check(self) -> Box<dyn Check> {
         Box::new(self)
     }
 }
@@ -460,7 +460,7 @@ where
     Cmd: Into<Vec<Arg>>,
     Data: Into<Vec<u8>>,
 {
-    StderrContainsOnce::new(norm_cmd(cmd), data.into()).as_check()
+    StderrContainsOnce::new(norm_cmd(cmd), data.into()).into_check()
 }
 
 /// Checks if file has provided content
@@ -491,7 +491,7 @@ impl Check for IsFileContent {
         }
     }
 
-    fn as_check(self) -> Box<dyn Check> {
+    fn into_check(self) -> Box<dyn Check> {
         Box::new(self)
     }
 }
@@ -502,7 +502,7 @@ where
     FilePath: Into<PathBuf>,
     Content: Into<Vec<u8>>,
 {
-    IsFileContent::new(path.into(), content.into()).as_check()
+    IsFileContent::new(path.into(), content.into()).into_check()
 }
 
 /// Checks if file contains provided data exactly once
@@ -532,7 +532,7 @@ impl Check for FileContainsOnce {
         }
     }
 
-    fn as_check(self) -> Box<dyn Check> {
+    fn into_check(self) -> Box<dyn Check> {
         Box::new(self)
     }
 }
@@ -543,7 +543,7 @@ where
     FilePath: Into<PathBuf>,
     Data: Into<Vec<u8>>,
 {
-    FileContainsOnce::new(path.into(), data.into()).as_check()
+    FileContainsOnce::new(path.into(), data.into()).into_check()
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -592,7 +592,7 @@ impl Check for IsServiceStatus {
         }
     }
 
-    fn as_check(self) -> Box<dyn Check> {
+    fn into_check(self) -> Box<dyn Check> {
         Box::new(self)
     }
 }
@@ -602,7 +602,7 @@ pub fn is_service_active<Service>(service: Service) -> Box<dyn Check>
 where
     Service: Into<String>,
 {
-    IsServiceStatus::new(service.into(), ServiceStatus::Active).as_check()
+    IsServiceStatus::new(service.into(), ServiceStatus::Active).into_check()
 }
 
 /// init [IsServiceStatus], checks if service inactive
@@ -610,7 +610,7 @@ pub fn is_service_inactive<Service>(service: Service) -> Box<dyn Check>
 where
     Service: Into<String>,
 {
-    IsServiceStatus::new(service.into(), ServiceStatus::Inactive).as_check()
+    IsServiceStatus::new(service.into(), ServiceStatus::Inactive).into_check()
 }
 
 /// init [IsServiceStatus], checks if service failed
@@ -618,7 +618,7 @@ pub fn is_service_failed<Service>(service: Service) -> Box<dyn Check>
 where
     Service: Into<String>,
 {
-    IsServiceStatus::new(service.into(), ServiceStatus::Failed).as_check()
+    IsServiceStatus::new(service.into(), ServiceStatus::Failed).into_check()
 }
 
 /// Checks if service is enabled
@@ -663,7 +663,7 @@ impl Check for IsServiceEnabled {
         }
     }
 
-    fn as_check(self) -> Box<dyn Check> {
+    fn into_check(self) -> Box<dyn Check> {
         Box::new(self)
     }
 }
@@ -673,7 +673,7 @@ pub fn is_service_enabled<Service>(service: Service) -> Box<dyn Check>
 where
     Service: Into<String>,
 {
-    IsServiceEnabled::new(service.into(), true).as_check()
+    IsServiceEnabled::new(service.into(), true).into_check()
 }
 
 /// init [IsServiceEnabled], checks if service disabled
@@ -681,7 +681,7 @@ pub fn is_service_disabled<Service>(service: Service) -> Box<dyn Check>
 where
     Service: Into<String>,
 {
-    IsServiceEnabled::new(service.into(), false).as_check()
+    IsServiceEnabled::new(service.into(), false).into_check()
 }
 
 #[cfg(test)]

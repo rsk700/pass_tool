@@ -14,13 +14,13 @@ impl Action for DoNothing {
     fn run(&self) -> ActionResult {
         ActionResult::Ok
     }
-    fn as_action(self) -> Box<dyn Action> {
+    fn into_action(self) -> Box<dyn Action> {
         Box::new(self)
     }
 }
 
 pub fn do_nothing() -> Box<dyn Action> {
-    DoNothing.as_action()
+    DoNothing.into_action()
 }
 
 #[cfg(test)]
