@@ -533,6 +533,7 @@ impl Check for FileContainsOnce {
         if let Ok(file_content) = std::fs::read(&self.path) {
             contains_once(&file_content, &self.data)
         } else {
+            // todo: failed
             false
         }
     }
@@ -674,7 +675,42 @@ where
     IsServiceEnabled::new(service.into()).as_check()
 }
 
-// todo: IsServiceDisabled
+/// Checks if service is disabled
+pub struct IsServiceDisabled {
+    is_service_enabled: IsServiceEnabled,
+}
+
+impl IsServiceDisabled {
+    const NAME: &'static str = "IsServiceDisabled";
+
+    pub fn new(service: String) -> Self {
+        Self {
+            is_service_enabled: IsServiceEnabled::new(service),
+        }
+    }
+}
+
+impl Check for IsServiceDisabled {
+    fn name(&self) -> &str {
+        Self::NAME
+    }
+
+    fn yes(&self) -> bool {
+        !self.is_service_enabled.yes()
+    }
+
+    fn as_check(self) -> Box<dyn Check> {
+        Box::new(self)
+    }
+}
+
+/// init [IsServiceDisabled]
+pub fn is_service_disabled<Service>(service: Service) -> Box<dyn Check>
+where
+    Service: Into<String>,
+{
+    IsServiceDisabled::new(service.into()).as_check()
+}
 
 #[cfg(test)]
 mod test {
