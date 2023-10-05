@@ -1,4 +1,5 @@
-use crate::{story_formatter::StoryFormatter, Action, ActionResult, Check};
+use crate::interfaces::{Action, ActionResult, Check};
+use crate::story_formatter::StoryFormatter;
 
 // note: currently using result for convinience instead of ActionResult, allows
 // using `?` operator, when it will be possible to overload it, need return

@@ -3,9 +3,9 @@ pub mod checks;
 pub mod interfaces;
 pub mod playbook;
 pub mod process;
+pub mod search;
 mod story_formatter;
 
-pub use interfaces::{Action, ActionResult, Check};
 pub use playbook::{instruction, Playbook};
 
 #[cfg(test)]

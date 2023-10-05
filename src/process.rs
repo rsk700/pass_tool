@@ -8,13 +8,13 @@ pub enum ExitCode {
 }
 
 pub struct ProcessOutput {
-    stdout: Vec<u8>,
-    stderr: Vec<u8>,
+    pub stdout: Vec<u8>,
+    pub stderr: Vec<u8>,
 }
 
 pub struct ProcessResult {
-    code: ExitCode,
-    output: Option<ProcessOutput>,
+    pub code: ExitCode,
+    pub output: Option<ProcessOutput>,
 }
 
 impl ProcessResult {
@@ -30,12 +30,16 @@ impl ProcessResult {
     }
 }
 
-pub fn run<Cmd, Arg>(cmd: Cmd) -> ProcessResult
+// todo: try `Arg: AsRef<str>`
+pub fn norm_cmd<Cmd, Arg>(cmd: Cmd) -> Vec<String>
 where
     Arg: Into<String>,
     Cmd: Into<Vec<Arg>>,
 {
-    let cmd: Vec<String> = cmd.into().into_iter().map(|c| c.into()).collect();
+    cmd.into().into_iter().map(|c| c.into()).collect()
+}
+
+pub fn run(cmd: &[String]) -> ProcessResult {
     let Some((cmd, args)) = cmd.split_first() else {
         return ProcessResult::fail_on_start();
     };
@@ -68,7 +72,7 @@ mod test {
     #[test]
     fn test_run() {
         {
-            let result = run(["echo", "1"]);
+            let result = run(&norm_cmd(["echo", "1"]));
             matches!(result.code, ExitCode::SuccessOnExit);
             assert!(result.ok());
             let Some(output) = result.output else {
@@ -77,12 +81,12 @@ mod test {
             assert_eq!(output.stdout, "1\n".as_bytes());
         }
         {
-            let result = run(["false"]);
+            let result = run(&norm_cmd(["false"]));
             matches!(result.code, ExitCode::ErrorOnExit);
             assert!(!result.ok());
         }
         {
-            let result = run(["aaabbb-not-a-command-bbbaaa"]);
+            let result = run(&norm_cmd(["aaabbb-not-a-command-bbbaaa"]));
             matches!(result.code, ExitCode::FailOnStart);
             assert!(!result.ok());
         }

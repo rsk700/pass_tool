@@ -1,15 +1,10 @@
-use crate::{Action, ActionResult};
+use crate::interfaces::{Action, ActionResult};
 
 /// [Action] which does nothing and always succeed
-#[derive(Clone)]
 pub struct DoNothing;
 
 impl DoNothing {
     const NAME: &'static str = "DoNothing";
-
-    pub fn as_action(self) -> Box<dyn Action> {
-        Box::new(self)
-    }
 }
 
 impl Action for DoNothing {
@@ -18,6 +13,9 @@ impl Action for DoNothing {
     }
     fn run(&self) -> ActionResult {
         ActionResult::Ok
+    }
+    fn as_action(self) -> Box<dyn Action> {
+        Box::new(self)
     }
 }
 
