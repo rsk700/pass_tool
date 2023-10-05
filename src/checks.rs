@@ -139,7 +139,6 @@ impl Check for IsFile {
         if let Ok(m) = std::fs::metadata(&self.path) {
             m.is_file()
         } else {
-            // todo: failed
             false
         }
     }
@@ -179,7 +178,6 @@ impl Check for IsDir {
         if let Ok(m) = std::fs::metadata(&self.path) {
             m.is_dir()
         } else {
-            // todo: failed
             false
         }
     }
@@ -403,7 +401,6 @@ impl Check for StdoutContainsOnce {
         if let Some(ProcessOutput { stdout, .. }) = result.output {
             contains_once(&stdout, &self.data)
         } else {
-            // todo: failed
             false
         }
     }
@@ -447,7 +444,6 @@ impl Check for StderrContainsOnce {
         if let Some(ProcessOutput { stderr, .. }) = result.output {
             contains_once(&stderr, &self.data)
         } else {
-            // todo: failed
             false
         }
     }
@@ -491,7 +487,6 @@ impl Check for IsFileContent {
         if let Ok(file_content) = std::fs::read(&self.path) {
             file_content == self.content
         } else {
-            // todo: failed
             false
         }
     }
@@ -533,7 +528,6 @@ impl Check for FileContainsOnce {
         if let Ok(file_content) = std::fs::read(&self.path) {
             contains_once(&file_content, &self.data)
         } else {
-            // todo: failed
             false
         }
     }
@@ -594,7 +588,6 @@ impl Check for IsServiceStatus {
                     ServiceStatus::Failed => "failed",
                 }
         } else {
-            // todo: failed
             false
         }
     }
@@ -657,7 +650,6 @@ impl Check for IsServiceEnabled {
             let status = status.trim();
             status == "enabled"
         } else {
-            // todo: failed
             false
         }
     }

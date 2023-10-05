@@ -1,7 +1,8 @@
 pub trait Check {
     /// Short name of [Check]
     fn name(&self) -> &str;
-    /// Perform check and return if succeed or not
+    /// Performs check and returns [true] in case of success, [false] - if check
+    /// negative or failed (eg. have not enough permission to perform check)
     fn yes(&self) -> bool;
     fn as_check(self) -> Box<dyn Check>;
 }
