@@ -210,7 +210,7 @@ impl Playbook {
 #[cfg(test)]
 mod tests {
     use crate::{
-        actions::do_nothing,
+        actions::always_ok,
         checks::{always_no, always_yes},
     };
 
@@ -228,7 +228,7 @@ mod tests {
             "action-env-ok",
             "",
             [],
-            [instruction(do_nothing()).with_env([always_yes()])]
+            [instruction(always_ok()).with_env([always_yes()])]
         )
         .apply()
         .ok());
@@ -236,7 +236,7 @@ mod tests {
             "action-env-fail",
             "",
             [],
-            [instruction(do_nothing()).with_env([always_no()])]
+            [instruction(always_ok()).with_env([always_no()])]
         )
         .apply()
         .ok());

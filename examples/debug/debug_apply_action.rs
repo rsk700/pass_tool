@@ -1,5 +1,5 @@
 use pass_tool::{
-    actions::do_nothing,
+    actions::always_ok,
     checks::{always_no, always_yes},
     instruction, Playbook,
 };
@@ -9,7 +9,7 @@ pub fn main() {
         "apply_action",
         "Playbook which applies action",
         [],
-        [instruction(do_nothing())
+        [instruction(always_ok())
             .confirm(always_no())
             .with_env(always_yes())],
     );

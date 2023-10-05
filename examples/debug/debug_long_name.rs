@@ -1,5 +1,5 @@
 use pass_tool::{
-    actions::do_nothing,
+    actions::always_ok,
     checks::{always_yes, named},
     instruction, Playbook,
 };
@@ -12,7 +12,7 @@ pub fn main() {
             "Very long name of check aaaaaaaa bbbbbbbbbb dddddddddd aaaaaaaaaaa dddddddddd aaaaaaaa bbbbbbbbbb dddddddddd aaaaaaaaaaa dddddddddd aaaaaaaa bbbbbbbbbb dddddddddd aaaaaaaaaaa dddddddddd aaaaaaaa bbbbbbbbbb dddddddddd aaaaaaaaaaa dddddddddd aaaaaaaa bbbbbbbbbb dddddddddd aaaaaaaaaaa dddddddddd",
             always_yes(),
         )],
-        [instruction(do_nothing())],
+        [instruction(always_ok())],
     );
     playbook.apply().ok();
 }

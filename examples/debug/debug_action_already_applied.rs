@@ -1,11 +1,11 @@
-use pass_tool::{actions::do_nothing, checks::always_yes, instruction, Playbook};
+use pass_tool::{actions::always_ok, checks::always_yes, instruction, Playbook};
 
 pub fn main() {
     let playbook = Playbook::new(
         "action_already_applied",
         "Playbook with already applied action",
         [],
-        [instruction(do_nothing()).confirm(always_yes())],
+        [instruction(always_ok()).confirm(always_yes())],
     );
     assert!(playbook.apply().ok());
 }

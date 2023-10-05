@@ -1,5 +1,5 @@
 use pass_tool::{
-    actions::do_nothing,
+    actions::always_ok,
     checks::{always_no, always_yes},
     instruction, Playbook,
 };
@@ -9,7 +9,7 @@ pub fn main() {
         "confirm_mixed",
         "Playbook with mixed confirmation checks",
         [],
-        [instruction(do_nothing()).confirm([always_yes(), always_no()])],
+        [instruction(always_ok()).confirm([always_yes(), always_no()])],
     );
     playbook.apply().ok();
 }

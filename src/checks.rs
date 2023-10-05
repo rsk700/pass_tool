@@ -6,7 +6,7 @@ use crate::{
 use nix::unistd::Uid;
 use std::{fs::OpenOptions, path::PathBuf};
 
-/// Check which always succeed
+/// Check which always `true`
 pub struct AlwaysYes;
 
 impl AlwaysYes {
@@ -32,7 +32,7 @@ pub fn always_yes() -> Box<dyn Check> {
     AlwaysYes.into_check()
 }
 
-/// Check which always negative
+/// Check which always `false`
 pub struct AlwaysNo;
 
 impl AlwaysNo {
@@ -462,7 +462,7 @@ where
     StderrContainsOnce::new(norm_cmd(cmd), data.into()).into_check()
 }
 
-/// Checks if file has provided content
+/// Checks if file matches exactly with provided content
 pub struct IsFileContent {
     path: PathBuf,
     content: Vec<u8>,
