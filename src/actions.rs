@@ -812,7 +812,7 @@ mod test {
 
     #[test]
     fn test_install_apt_packages() {
-        // todo: manual
+        // use manual test test_install_apt_packages
     }
 
     #[test]
@@ -830,7 +830,7 @@ mod test {
         assert_eq!(write_file(&p, "111").run(), ActionResult::Ok);
         assert_eq!(std::fs::read(&p).unwrap(), "111".as_bytes());
         std::fs::remove_file(&p).unwrap();
-        // todo: manual test with permissions
+        // use manual test test_write_file
     }
 
     #[test]
@@ -844,12 +844,12 @@ mod test {
         // checking no error if directory already exists
         assert_eq!(create_dir(path).run(), ActionResult::Ok);
         std::fs::remove_dir(path).unwrap();
-        // todo: manual test with permissions
+        // use manual test test_create_dir
     }
 
     #[test]
-    fn set_path_permissions() {
-        // todo: manual test
+    fn test_set_path_permissions() {
+        // use manual test test_set_path_permissions
     }
 
     #[test]
@@ -908,6 +908,12 @@ mod test {
 
     #[test]
     fn test_service_command() {
-        // todo: manual
+        // use manual tests:
+        //  - test_service_command_start
+        //  - test_service_command_stop
+        //  - test_service_command_restart
+        //  - test_service_command_reload
+        //  - test_service_command_enable
+        //  - test_service_command_disable
     }
 }

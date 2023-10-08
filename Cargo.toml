@@ -50,3 +50,43 @@ path = "examples/tests/test_is_service_status.rs"
 [[example]]
 name = "test_is_service_enabled"
 path = "examples/tests/test_is_service_enabled.rs"
+
+[[example]]
+name = "test_install_apt_packages"
+path = "examples/tests/test_install_apt_packages.rs"
+
+[[example]]
+name = "test_write_file"
+path = "examples/tests/test_write_file.rs"
+
+[[example]]
+name = "test_create_dir"
+path = "examples/tests/test_create_dir.rs"
+
+[[example]]
+name = "test_set_path_permissions"
+path = "examples/tests/test_set_path_permissions.rs"
+
+[[example]]
+name = "test_service_command_start"
+path = "examples/tests/test_service_command_start.rs"
+
+[[example]]
+name = "test_service_command_stop"
+path = "examples/tests/test_service_command_stop.rs"
+
+[[example]]
+name = "test_service_command_restart"
+path = "examples/tests/test_service_command_restart.rs"
+
+[[example]]
+name = "test_service_command_reload"
+path = "examples/tests/test_service_command_reload.rs"
+
+[[example]]
+name = "test_service_command_enable"
+path = "examples/tests/test_service_command_enable.rs"
+
+[[example]]
+name = "test_service_command_disable"
+path = "examples/tests/test_service_command_disable.rs"

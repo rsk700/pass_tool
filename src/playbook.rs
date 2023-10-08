@@ -82,6 +82,16 @@ impl Playbook {
         Checks: Into<Vec<Box<dyn Check>>>,
         Instructions: Into<Vec<Instruction>>,
     {
+        let name = if name.is_empty() {
+            "?without_name?"
+        } else {
+            name
+        };
+        let description = if description.is_empty() {
+            "?Without description?"
+        } else {
+            description
+        };
         Self {
             name,
             description,
