@@ -126,8 +126,11 @@ impl Action for Many {
 }
 
 /// init [Many]
-pub fn many(actions: Vec<Box<dyn Action>>) -> Box<dyn Action> {
-    Many::new(actions).into_action()
+pub fn many<Actions>(actions: Actions) -> Box<dyn Action>
+where
+    Actions: Into<Vec<Box<dyn Action>>>,
+{
+    Many::new(actions.into()).into_action()
 }
 
 /// Runs external process using provided command
@@ -575,10 +578,6 @@ impl Action for ReplaceInFileOnce {
     }
 
     fn run(&self) -> ActionResult {
-        // helps to deal with replacing "" with "" (otherwise will be Fail)
-        if self.target == self.new_data {
-            return ActionResult::Ok;
-        }
         if let Ok(c) = std::fs::read(&self.path) {
             if let Some(i) = find_pattern(&c, &self.target) {
                 if find_pattern(&c[i + self.target.len()..], &self.target).is_some() {
@@ -655,7 +654,7 @@ impl Action for RenamePath {
 }
 
 /// init [RenameDir]
-pub fn rename_dir<FilePath>(path: FilePath, new_path: FilePath) -> Box<dyn Action>
+pub fn rename_path<FilePath>(path: FilePath, new_path: FilePath) -> Box<dyn Action>
 where
     FilePath: Into<PathBuf>,
 {
@@ -671,7 +670,7 @@ pub enum ServiceCommands {
     Disable,
 }
 
-/// Sends control comand to service
+/// Sends control command to service
 pub struct ServiceCommand {
     service: String,
     command: ServiceCommands,
@@ -764,11 +763,151 @@ where
 mod test {
     use super::*;
 
+    const NOT_A_FILE: &str = "/tmp/not-a-pass-test-file-5555555555";
+
+    fn create_test_file(name: &str) -> String {
+        let path = format!("/tmp/pass-test-file-111222333-{}", name);
+        std::fs::write(&path, "aaabbbccc").unwrap();
+        path
+    }
+
     #[test]
-    fn test_actions() {
+    fn test_always_ok() {
+        assert_eq!(always_ok().run(), ActionResult::Ok);
+    }
+
+    #[test]
+    fn test_always_fail() {
+        assert_eq!(always_fail().run(), ActionResult::Fail);
+    }
+
+    #[test]
+    fn test_named() {
+        let a = named("aaa", always_ok());
+        assert_eq!(a.name(), "aaa");
+        assert_eq!(a.run(), ActionResult::Ok);
+    }
+
+    #[test]
+    fn test_many() {
+        assert_eq!(many([]).run(), ActionResult::Ok);
+        assert_eq!(many([always_ok(), always_ok()]).run(), ActionResult::Ok);
+        assert_eq!(many([always_ok(), always_fail()]).run(), ActionResult::Fail);
+    }
+
+    #[test]
+    fn test_command() {
+        assert_eq!(command(["echo", "1"]).run(), ActionResult::Ok);
+        assert_eq!(command(["false"]).run(), ActionResult::Fail);
+        assert_eq!(
+            command(["random-incorrect-command-aaabbb222"]).run(),
+            ActionResult::Fail
+        );
+    }
+
+    #[test]
+    fn test_invert() {
+        assert_eq!(invert(always_ok()).run(), ActionResult::Fail);
+    }
+
+    #[test]
+    fn test_install_apt_packages() {
+        // todo: manual
+    }
+
+    #[test]
+    fn test_delete_file() {
+        assert_eq!(delete_file(NOT_A_FILE).run(), ActionResult::Ok);
+        let p = create_test_file("test_delete_file");
+        assert_eq!(delete_file(&p).run(), ActionResult::Ok);
+        let p: PathBuf = p.into();
+        assert!(!p.exists());
+    }
+
+    #[test]
+    fn test_write_file() {
+        let p = create_test_file("test_write_file");
+        assert_eq!(write_file(&p, "111").run(), ActionResult::Ok);
+        assert_eq!(std::fs::read(&p).unwrap(), "111".as_bytes());
+        std::fs::remove_file(&p).unwrap();
+        // todo: manual test with permissions
+    }
+
+    #[test]
+    fn test_create_dir() {
+        assert_eq!(
+            create_dir("/tmp/pass-test-file-111222333-test_create_dir/1/1/1").run(),
+            ActionResult::Fail
+        );
+        let path = "/tmp/pass-test-file-111222333-test_create_dir";
+        assert_eq!(create_dir(path).run(), ActionResult::Ok);
+        // checking no error if directory already exists
+        assert_eq!(create_dir(path).run(), ActionResult::Ok);
+        std::fs::remove_dir(path).unwrap();
+        // todo: manual test with permissions
+    }
+
+    #[test]
+    fn set_path_permissions() {
+        // todo: manual test
+    }
+
+    #[test]
+    fn test_replace_in_file_once() {
         {
-            let actions = always_ok();
-            matches!(actions.run(), ActionResult::Ok);
+            let p = create_test_file("test_replace_in_file_once");
+            assert_eq!(replace_in_file_once(&p, "ab", "11").run(), ActionResult::Ok);
+            assert_eq!(std::fs::read(&p).unwrap(), "aa11bbccc".as_bytes());
+            std::fs::remove_file(&p).unwrap();
         }
+        {
+            let p = create_test_file("test_replace_in_file_once");
+            assert_eq!(replace_in_file_once(&p, "a", "a").run(), ActionResult::Fail);
+            assert_eq!(std::fs::read(&p).unwrap(), "aaabbbccc".as_bytes());
+            assert_eq!(
+                replace_in_file_once(&p, "a", "11").run(),
+                ActionResult::Fail
+            );
+            assert_eq!(std::fs::read(&p).unwrap(), "aaabbbccc".as_bytes());
+            assert_eq!(
+                replace_in_file_once(&p, "111", "222").run(),
+                ActionResult::Fail
+            );
+            assert_eq!(replace_in_file_once(&p, "", "").run(), ActionResult::Fail);
+            assert_eq!(std::fs::read(&p).unwrap(), "aaabbbccc".as_bytes());
+            assert_eq!(
+                replace_in_file_once(&p, "", "111").run(),
+                ActionResult::Fail
+            );
+            assert_eq!(std::fs::read(&p).unwrap(), "aaabbbccc".as_bytes());
+            std::fs::remove_file(&p).unwrap();
+        }
+    }
+
+    #[test]
+    fn test_rename_path() {
+        {
+            let path1 = "/tmp/pass-test-file-111222333-test_rename_path_1";
+            let path2 = "/tmp/pass-test-file-111222333-test_rename_path_2";
+            std::fs::write(path1, "path1").unwrap();
+            assert_eq!(rename_path(path1, path2).run(), ActionResult::Ok);
+            let path_buf: PathBuf = path2.into();
+            assert!(path_buf.exists());
+            std::fs::remove_file(path2).unwrap();
+        }
+        {
+            let path1 = "/tmp/pass-test-dir-111222333-test_rename_path_1";
+            let path2 = "/tmp/pass-test-dir-111222333-test_rename_path_2";
+            std::fs::create_dir(path1).unwrap();
+            assert_eq!(rename_path(path1, path2).run(), ActionResult::Ok);
+            let path_buf: PathBuf = path2.into();
+            assert!(path_buf.exists());
+            std::fs::remove_dir(path2).unwrap();
+        }
+    }
+
+    #[test]
+    fn test_service_command() {
+        // todo: manual
     }
 }

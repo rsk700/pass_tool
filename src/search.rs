@@ -1,3 +1,5 @@
+/// Checks if pattern appears once in data (without overlapping, `true` for "aa"
+/// inside "aaa"), will report `false` if pattern is empty
 pub fn contains_once<Data, Pattern, T>(data: Data, pattern: Pattern) -> bool
 where
     Data: AsRef<[T]>,
@@ -7,12 +9,7 @@ where
     let data = data.as_ref();
     let pattern = pattern.as_ref();
     if let Some(index) = find_pattern(data, pattern) {
-        if data.len() == pattern.len() {
-            // this checks if data and pattern both is empty
-            true
-        } else {
-            find_pattern(&data[index + pattern.len()..], pattern).is_none()
-        }
+        find_pattern(&data[index + pattern.len()..], pattern).is_none()
     } else {
         false
     }
@@ -38,7 +35,7 @@ mod test {
 
     #[test]
     fn test_contains_once() {
-        assert!(contains_once("", ""));
+        assert!(!contains_once("", ""));
         assert!(!contains_once("", "bc"));
         assert!(!contains_once("abcd", ""));
         assert!(contains_once("abcd", "cd"));
