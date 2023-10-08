@@ -223,17 +223,95 @@ mod tests {
         actions::always_ok,
         checks::{always_no, always_yes},
     };
+    use std::cell::RefCell;
 
     use super::*;
 
-    // todo: for tests create check (only in this test module) which flips each time it runs (use AtomicBool?)
+    /// Check which changes result each time it checked
+    struct AlwaysFlips {
+        result: RefCell<bool>,
+    }
+
+    impl AlwaysFlips {
+        const NAME: &'static str = "AlwaysFlips";
+
+        pub fn new(next_result: bool) -> Self {
+            Self {
+                result: RefCell::new(next_result),
+            }
+        }
+    }
+
+    impl Check for AlwaysFlips {
+        fn name(&self) -> &str {
+            Self::NAME
+        }
+
+        fn yes(&self) -> bool {
+            let mut result = self.result.try_borrow_mut().unwrap();
+            let next_result = *result;
+            *result = !*result;
+            next_result
+        }
+
+        fn into_check(self) -> Box<dyn Check> {
+            Box::new(self)
+        }
+    }
+
+    fn flip(result: bool) -> Box<dyn Check> {
+        AlwaysFlips::new(result).into_check()
+    }
+
     #[test]
     fn test_playbook() {
-        assert!(Playbook::new("empty", "", [], []).apply().ok());
-        assert!(Playbook::new("env-ok", "", [always_yes()], []).apply().ok());
         assert!(!Playbook::new("env-fail", "", [always_no()], [])
             .apply()
             .ok());
+        assert!(!Playbook::new(
+            "action-env-fail",
+            "",
+            [],
+            [instruction(always_ok()).with_env(always_no())]
+        )
+        .apply()
+        .ok());
+        assert!(!Playbook::new(
+            "action-confirm-mixed",
+            "",
+            [],
+            [instruction(always_ok()).confirm([always_yes(), always_no()])]
+        )
+        .apply()
+        .ok());
+        assert!(!Playbook::new(
+            "action-confirm-f-after",
+            "",
+            [],
+            [instruction(always_ok()).confirm([always_no()])]
+        )
+        .apply()
+        .ok());
+        assert!(Playbook::new(
+            "action-env-t-confirm-f-t",
+            "",
+            [],
+            [instruction(always_ok())
+                .with_env([always_yes()])
+                .confirm([flip(false)])]
+        )
+        .apply()
+        .ok());
+        assert!(Playbook::new(
+            "action-confirm-t-before",
+            "",
+            [],
+            [instruction(always_ok()).confirm([always_yes()])]
+        )
+        .apply()
+        .ok());
+        assert!(Playbook::new("empty", "", [], []).apply().ok());
+        assert!(Playbook::new("env-ok", "", [always_yes()], []).apply().ok());
         assert!(Playbook::new(
             "action-env-ok",
             "",
