@@ -1,5 +1,5 @@
 use pass_tool::{
-    checks::{is_service_active, is_service_failed, is_service_inactive},
+    checks::{service_is_active, service_is_failed, service_is_inactive},
     Playbook,
 };
 
@@ -14,9 +14,9 @@ fn main() {
         "test_is_service_status",
         "",
         [
-            is_service_active("nginx"),
-            is_service_inactive("nginx"),
-            is_service_failed("nginx"),
+            service_is_active("nginx"),
+            service_is_inactive("nginx"),
+            service_is_failed("nginx"),
         ],
         [],
     )

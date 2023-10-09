@@ -1,5 +1,5 @@
 use pass_tool::{
-    checks::{is_service_disabled, is_service_enabled},
+    checks::{service_is_disabled, service_is_enabled},
     Playbook,
 };
 
@@ -10,7 +10,7 @@ fn main() {
     Playbook::new(
         "test_is_service_enabled",
         "",
-        [is_service_enabled("nginx"), is_service_disabled("nginx")],
+        [service_is_enabled("nginx"), service_is_disabled("nginx")],
         [],
     )
     .apply();

@@ -398,7 +398,7 @@ impl Check for StdoutContainsOnce {
     fn yes(&self) -> bool {
         let result = run(&self.cmd);
         if let Some(ProcessOutput { stdout, .. }) = result.output {
-            contains_once(&stdout, &self.data)
+            contains_once(stdout, &self.data)
         } else {
             false
         }
@@ -553,20 +553,20 @@ pub enum ServiceStatus {
 }
 
 /// Checks if service has provided status
-pub struct IsServiceStatus {
+pub struct ServiceInStatus {
     service: String,
     status: ServiceStatus,
 }
 
-impl IsServiceStatus {
-    const NAME: &'static str = "IsServiceStatus";
+impl ServiceInStatus {
+    const NAME: &'static str = "ServiceInStatus";
 
     pub fn new(service: String, status: ServiceStatus) -> Self {
         Self { service, status }
     }
 }
 
-impl Check for IsServiceStatus {
+impl Check for ServiceInStatus {
     fn name(&self) -> &str {
         Self::NAME
     }
@@ -596,38 +596,38 @@ impl Check for IsServiceStatus {
     }
 }
 
-/// init [IsServiceStatus], checks if service active
-pub fn is_service_active<Service>(service: Service) -> Box<dyn Check>
+/// init [ServiceInStatus], checks if service active
+pub fn service_is_active<Service>(service: Service) -> Box<dyn Check>
 where
     Service: Into<String>,
 {
-    IsServiceStatus::new(service.into(), ServiceStatus::Active).into_check()
+    ServiceInStatus::new(service.into(), ServiceStatus::Active).into_check()
 }
 
-/// init [IsServiceStatus], checks if service inactive
-pub fn is_service_inactive<Service>(service: Service) -> Box<dyn Check>
+/// init [ServiceInStatus], checks if service inactive
+pub fn service_is_inactive<Service>(service: Service) -> Box<dyn Check>
 where
     Service: Into<String>,
 {
-    IsServiceStatus::new(service.into(), ServiceStatus::Inactive).into_check()
+    ServiceInStatus::new(service.into(), ServiceStatus::Inactive).into_check()
 }
 
-/// init [IsServiceStatus], checks if service failed
-pub fn is_service_failed<Service>(service: Service) -> Box<dyn Check>
+/// init [ServiceInStatus], checks if service failed
+pub fn service_is_failed<Service>(service: Service) -> Box<dyn Check>
 where
     Service: Into<String>,
 {
-    IsServiceStatus::new(service.into(), ServiceStatus::Failed).into_check()
+    ServiceInStatus::new(service.into(), ServiceStatus::Failed).into_check()
 }
 
 /// Checks if service is enabled
-pub struct IsServiceEnabled {
+pub struct ServiceIsEnabled {
     service: String,
     is_enabled: bool,
 }
 
-impl IsServiceEnabled {
-    const NAME: &'static str = "IsServiceEnabled";
+impl ServiceIsEnabled {
+    const NAME: &'static str = "ServiceIsEnabled";
 
     pub fn new(service: String, is_enabled: bool) -> Self {
         Self {
@@ -637,7 +637,7 @@ impl IsServiceEnabled {
     }
 }
 
-impl Check for IsServiceEnabled {
+impl Check for ServiceIsEnabled {
     fn name(&self) -> &str {
         Self::NAME
     }
@@ -667,20 +667,20 @@ impl Check for IsServiceEnabled {
     }
 }
 
-/// init [IsServiceEnabled], checks if service enabled
-pub fn is_service_enabled<Service>(service: Service) -> Box<dyn Check>
+/// init [ServiceIsEnabled], checks if service enabled
+pub fn service_is_enabled<Service>(service: Service) -> Box<dyn Check>
 where
     Service: Into<String>,
 {
-    IsServiceEnabled::new(service.into(), true).into_check()
+    ServiceIsEnabled::new(service.into(), true).into_check()
 }
 
-/// init [IsServiceEnabled], checks if service disabled
-pub fn is_service_disabled<Service>(service: Service) -> Box<dyn Check>
+/// init [ServiceIsEnabled], checks if service disabled
+pub fn service_is_disabled<Service>(service: Service) -> Box<dyn Check>
 where
     Service: Into<String>,
 {
-    IsServiceEnabled::new(service.into(), false).into_check()
+    ServiceIsEnabled::new(service.into(), false).into_check()
 }
 
 #[cfg(test)]
@@ -813,12 +813,12 @@ mod test {
     }
 
     #[test]
-    fn test_is_service_status() {
-        // use `test_is_service_status` example for manual testing
+    fn test_service_in_status() {
+        // use `test_service_in_status` example for manual testing
     }
 
     #[test]
-    fn test_is_service_enabled() {
-        // use `test_is_service_enabled` example for manual testing
+    fn test_service_is_enabled() {
+        // use `test_service_is_enabled` example for manual testing
     }
 }

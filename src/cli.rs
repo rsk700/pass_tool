@@ -62,34 +62,31 @@ impl From<Playbook> for Result<Playbook, String> {
     }
 }
 
-pub fn run_cli_with_input<GetPlaybook, IntoPb>(
+pub fn run_cli_with_input<GetPlaybook>(
     get_playbook: GetPlaybook,
     input_help: &'static str,
     source: &'static str,
 ) where
-    IntoPb: Into<Result<Playbook, String>>,
-    GetPlaybook: FnOnce(&[u8]) -> IntoPb,
+    GetPlaybook: FnOnce(&[u8]) -> Result<Playbook, String>,
 {
     let args = ArgsWithInput::parse();
     match args.command {
-        CommandsWithInput::About { input: Some(input) } => {
-            match get_playbook(input.as_bytes()).into() {
-                Ok(pb) => {
-                    print_about(&pb);
-                    println!();
-                    println!("{input_help}");
-                }
-                Err(e) => {
-                    println!("{e}");
-                    std::process::exit(1);
-                }
+        CommandsWithInput::About { input: Some(input) } => match get_playbook(input.as_bytes()) {
+            Ok(pb) => {
+                print_about(&pb);
+                println!();
+                println!("{input_help}");
             }
-        }
+            Err(e) => {
+                println!("{e}");
+                std::process::exit(1);
+            }
+        },
         CommandsWithInput::About { input: None } => {
             println!("{input_help}");
         }
         CommandsWithInput::Source => println!("{source}"),
-        CommandsWithInput::Apply { input } => match get_playbook(input.as_bytes()).into() {
+        CommandsWithInput::Apply { input } => match get_playbook(input.as_bytes()) {
             Ok(pb) => {
                 if pb.apply() == ActionResult::Fail {
                     std::process::exit(1);

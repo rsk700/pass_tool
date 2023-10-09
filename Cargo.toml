@@ -45,12 +45,12 @@ name = "test_user_is_root"
 path = "examples/tests/test_user_is_root.rs"
 
 [[example]]
-name = "test_is_service_status"
-path = "examples/tests/test_is_service_status.rs"
+name = "test_service_in_status"
+path = "examples/tests/test_service_in_status.rs"
 
 [[example]]
-name = "test_is_service_enabled"
-path = "examples/tests/test_is_service_enabled.rs"
+name = "test_service_is_enabled"
+path = "examples/tests/test_service_is_enabled.rs"
 
 [[example]]
 name = "test_install_apt_packages"
