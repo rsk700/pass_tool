@@ -33,8 +33,10 @@ fn main() {
             } else {
                 return Err(HELP.to_owned());
             };
-            // todo: replace domain name
-            let nginx_conf = NGINX_CONF;
+            let nginx_conf = NGINX_CONF
+                .split("{--domain--}")
+                .collect::<Vec<_>>()
+                .join(domain);
             Ok(Playbook::new(
                 "Install and configure nginx with https",
                 ABOUT,
