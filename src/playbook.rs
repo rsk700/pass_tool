@@ -130,7 +130,7 @@ impl Playbook {
     // todo: test cases for each `if`
     pub fn apply(&self) -> ActionResult {
         let mut story = StoryFormatter::new();
-        story.playbook_header(self.description);
+        story.playbook_header(self.name);
         let playbook_result: ActionResult = story.section("Playbook", |story| {
             if !self.env_checks.is_empty() {
                 story.checklist("Environment", |story| {
@@ -212,7 +212,7 @@ impl Playbook {
             }
             Ok(()) // -- end .Playbook
         }).into();
-        StoryFormatter::playbook_result(self.description, playbook_result.ok());
+        StoryFormatter::playbook_result(self.name, playbook_result.ok());
         playbook_result
     }
 }
