@@ -4,9 +4,11 @@ pub mod interfaces;
 pub mod playbook;
 pub mod process;
 pub mod search;
+mod cli;
 mod story_formatter;
 
 pub use playbook::{instruction, Playbook};
+pub use cli::run_with_cli;
 
 #[cfg(test)]
 mod tests {
