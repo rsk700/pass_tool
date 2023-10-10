@@ -5,6 +5,7 @@ authors = ["Roman Kudryavtsev <rskbox@gmail.com>"]
 license = "MIT"
 description = "Tool for system configuration intended for making automation scripts using Rust"
 readme = "README.md"
+repository = "https://github.com/rsk700/pass_tool"
 edition = "2021"
 
 keywords = ["automation", "script"]
