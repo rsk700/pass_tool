@@ -86,7 +86,7 @@ impl Action for Named {
 }
 
 /// init [Named]
-pub fn named<Name>(name: Name, action: Box<dyn Action>) -> Box<dyn Action>
+pub fn action<Name>(name: Name, action: Box<dyn Action>) -> Box<dyn Action>
 where
     Name: Into<String>,
 {
@@ -783,7 +783,7 @@ mod test {
 
     #[test]
     fn test_named() {
-        let a = named("aaa", always_ok());
+        let a = action("aaa", always_ok());
         assert_eq!(a.name(), "aaa");
         assert_eq!(a.run(), ActionResult::Ok);
     }

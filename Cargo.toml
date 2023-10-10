@@ -91,3 +91,15 @@ path = "examples/tests/test_service_command_enable.rs"
 [[example]]
 name = "test_service_command_disable"
 path = "examples/tests/test_service_command_disable.rs"
+
+[[example]]
+name = "test_init_dgraph"
+path = "examples/tests/test_init_dgraph.rs"
+
+[[example]]
+name = "test_is_applied"
+path = "examples/tests/test_is_applied.rs"
+
+[[example]]
+name = "test_mark_applied"
+path = "examples/tests/test_mark_applied.rs"

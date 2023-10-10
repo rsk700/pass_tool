@@ -85,7 +85,7 @@ impl Check for Named {
 }
 
 /// init [Named]
-pub fn named<Name>(name: Name, check: Box<dyn Check>) -> Box<dyn Check>
+pub fn check<Name>(name: Name, check: Box<dyn Check>) -> Box<dyn Check>
 where
     Name: Into<String>,
 {
@@ -715,10 +715,10 @@ mod test {
 
     #[test]
     fn test_named() {
-        let c = named("aaa", always_yes());
+        let c = check("aaa", always_yes());
         assert_eq!(c.name(), "aaa");
         assert!(c.yes());
-        let c = named("aaa", always_no());
+        let c = check("aaa", always_no());
         assert!(!c.yes());
     }
 
