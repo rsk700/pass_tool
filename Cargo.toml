@@ -1,7 +1,14 @@
 [package]
 name = "pass_tool"
 version = "0.1.0"
+authors = ["Roman Kudryavtsev <rskbox@gmail.com>"]
+license = "MIT"
+description = "Tool for system configuration intended for making automation scripts using Rust"
+readme = "README.md"
 edition = "2021"
+
+keywords = ["automation", "script"]
+categories = ["command-line-utilities", "config", "filesystem"]
 
 [dependencies]
 clap = { version = "4.4", features = ["derive"] }
