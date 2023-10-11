@@ -57,15 +57,13 @@ pub fn mark_applied<Name>(applied_playbook: Name) -> Instruction
 where
     Name: Into<String>,
 {
-    instruction(write_file_perm(
-        dep_flag_path(applied_playbook.into()),
-        "",
-        perm(0o444, "root"),
-    ))
-    .with_env([
-        user_is_root(),
-        check("Dependency graph is supported", is_dir("/srv/pass/applied")),
-    ])
+    let flag_path = dep_flag_path(applied_playbook.into());
+    instruction(write_file_perm(&flag_path, "", perm(0o444, "root")))
+        .with_env([
+            user_is_root(),
+            check("Dependency graph is supported", is_dir("/srv/pass/applied")),
+        ])
+        .confirm(is_file(&flag_path))
 }
 
 #[cfg(test)]
