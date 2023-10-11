@@ -26,9 +26,7 @@ fn main() {
         |input| {
             let input = String::from_utf8(input.to_vec()).or(Err(HELP.to_owned()))?;
             let mut parts = input.split(',');
-            let (email, domain) = if let [Some(e), Some(d)] = [parts.next(), parts.next()] {
-                (e, d)
-            } else {
+            let [Some(email), Some(domain)] = [parts.next(), parts.next()] else {
                 return Err(HELP.to_owned());
             };
             let nginx_conf = NGINX_CONF
