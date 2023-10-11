@@ -653,7 +653,7 @@ impl Action for RenamePath {
     }
 }
 
-/// init [RenameDir]
+/// init [RenamePath]
 pub fn rename_path<FilePath>(path: FilePath, new_path: FilePath) -> Box<dyn Action>
 where
     FilePath: Into<PathBuf>,
