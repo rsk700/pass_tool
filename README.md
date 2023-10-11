@@ -1,6 +1,7 @@
 # Pass
 
 [docs](https://docs.rs/pass_tool)
+
 [crate](https://crates.io/crates/pass_tool)
 
 `Pass` - is a tool for system configuration. Configuration change is described as `checks` and `actions`. `Check` is for checking current state of system (eg. if nginx installed). `Action` changes state of the system (eg. install nginx). `Pass` allows either apply changes or verify if changes can be applied based on described checks.
