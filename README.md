@@ -15,7 +15,7 @@
 `Instruction` - contains `environment checks`, `confirmation checks` and `action` to be applied:
 
 - `Environment checks` checked before action, and must be all `true`
-- `Confirmation checks` checked before and after action, if it `false` before action - action will be applied and `confirmation checks` checked again after action now all checks must be `true`, if it `true` before action - action will b e skipped (action considered already applied)
+- `Confirmation checks` checked before and after action, if it `false` before action - action will be applied and `confirmation checks` checked again after action now all checks must be `true`, if it `true` before action - action will be skipped (action considered already applied)
 
 # Example
 
