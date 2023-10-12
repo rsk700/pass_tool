@@ -2,6 +2,7 @@ pub mod actions;
 pub mod checks;
 mod cli;
 pub mod dgraph;
+pub mod instructions;
 pub mod interfaces;
 pub mod playbook;
 pub mod process;
