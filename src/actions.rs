@@ -759,6 +759,25 @@ where
     ServiceCommand::new(service.into(), ServiceCommands::Disable).into_action()
 }
 
+/// implements [Action] for tuple with name and function
+impl<N, F> Action for (N, F)
+where
+    N: AsRef<str> + 'static,
+    F: Fn() -> ActionResult + 'static,
+{
+    fn name(&self) -> &str {
+        self.0.as_ref()
+    }
+
+    fn run(&self) -> ActionResult {
+        self.1()
+    }
+
+    fn into_action(self) -> Box<dyn Action> {
+        Box::new(self)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -915,5 +934,19 @@ mod test {
         //  - test_service_command_reload
         //  - test_service_command_enable
         //  - test_service_command_disable
+    }
+
+    #[test]
+    fn test_tuple_as_action() {
+        {
+            let a = ("a1", || ActionResult::Ok).into_action();
+            assert_eq!(a.name(), "a1");
+            matches!(a.run(), ActionResult::Ok);
+        }
+        {
+            let a = ("a2".to_owned(), || ActionResult::Fail).into_action();
+            assert_eq!(a.name(), "a2");
+            matches!(a.run(), ActionResult::Fail);
+        }
     }
 }

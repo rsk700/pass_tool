@@ -683,6 +683,25 @@ where
     ServiceIsEnabled::new(service.into(), false).into_check()
 }
 
+/// Implements [Check] for tuple with name and function
+impl<N, F> Check for (N, F)
+where
+    N: AsRef<str> + 'static,
+    F: Fn() -> bool + 'static,
+{
+    fn name(&self) -> &str {
+        self.0.as_ref()
+    }
+
+    fn yes(&self) -> bool {
+        self.1()
+    }
+
+    fn into_check(self) -> Box<dyn Check> {
+        Box::new(self)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -820,5 +839,22 @@ mod test {
     #[test]
     fn test_service_is_enabled() {
         // use `test_service_is_enabled` example for manual testing
+    }
+
+    #[test]
+    fn test_tuple_as_check() {
+        {
+            let c = ("t1", || true).into_check();
+            assert_eq!(c.name(), "t1");
+            assert!(c.yes());
+        }
+        {
+            let c = ("t2", || false).into_check();
+            assert!(!c.yes());
+        }
+        {
+            let c = ("t3".to_owned(), || true).into_check();
+            assert!(c.yes());
+        }
     }
 }
