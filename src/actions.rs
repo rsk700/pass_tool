@@ -1,4 +1,5 @@
 use std::{
+    ffi::OsString,
     io::ErrorKind,
     os::unix::fs::{chown, PermissionsExt},
     path::{Path, PathBuf},
@@ -759,6 +760,75 @@ where
     ServiceCommand::new(service.into(), ServiceCommands::Disable).into_action()
 }
 
+/// Copy file into provided directory, if optional new name set file will be
+/// renamed
+struct CopyFile {
+    file_path: PathBuf,
+    target_dir: PathBuf,
+    new_name: Option<OsString>,
+}
+
+impl CopyFile {
+    const NAME: &'static str = "CopyFile";
+
+    pub fn new(file_path: PathBuf, target_dir: PathBuf, new_name: Option<OsString>) -> Self {
+        Self {
+            file_path,
+            target_dir,
+            new_name,
+        }
+    }
+}
+
+impl Action for CopyFile {
+    fn name(&self) -> &str {
+        Self::NAME
+    }
+
+    fn run(&self) -> ActionResult {
+        let target_path = if let Some(name) = &self.new_name {
+            self.target_dir.join(name)
+        } else {
+            let Some(name) = self.file_path.file_name() else {
+                return ActionResult::Fail;
+            };
+            self.target_dir.join(name)
+        };
+        if std::fs::copy(&self.file_path, target_path).is_ok() {
+            ActionResult::Ok
+        } else {
+            ActionResult::Fail
+        }
+    }
+
+    fn into_action(self) -> Box<dyn Action> {
+        Box::new(self)
+    }
+}
+
+/// init [CopyFile], will copy file without rename
+pub fn copy_file<FilePath, TargetDir>(file_path: FilePath, target_dir: TargetDir) -> Box<dyn Action>
+where
+    FilePath: Into<PathBuf>,
+    TargetDir: Into<PathBuf>,
+{
+    CopyFile::new(file_path.into(), target_dir.into(), None).into_action()
+}
+
+/// init [CopyFile], will copy file with rename
+pub fn copy_file_named<FilePath, TargetDir, NewName>(
+    file_path: FilePath,
+    target_dir: TargetDir,
+    new_name: NewName,
+) -> Box<dyn Action>
+where
+    FilePath: Into<PathBuf>,
+    TargetDir: Into<PathBuf>,
+    NewName: Into<OsString>,
+{
+    CopyFile::new(file_path.into(), target_dir.into(), Some(new_name.into())).into_action()
+}
+
 /// implements [Action] for tuple with name and function
 impl<N, F> Action for (N, F)
 where
@@ -948,5 +1018,23 @@ mod test {
             assert_eq!(a.name(), "a2");
             matches!(a.run(), ActionResult::Fail);
         }
+    }
+
+    #[test]
+    fn test_copy_file() {
+        let d: PathBuf = "/tmp/pass-test-dir-111222333".into();
+        let p = create_test_file("original_file");
+        let p_path: PathBuf = p.clone().into();
+        let p_name = p_path.file_name().unwrap();
+        let new_name = "pass-test-file-111222333-copy-file-new-name";
+        std::fs::create_dir(&d).unwrap();
+        assert_eq!(copy_file(&p, &d).run(), ActionResult::Ok);
+        assert!(d.join(p_name).is_file());
+        assert_eq!(copy_file_named(&p, &d, new_name).run(), ActionResult::Ok);
+        assert!(d.join(new_name).is_file());
+        std::fs::remove_file(&p).unwrap();
+        std::fs::remove_file(d.join(p_name)).unwrap();
+        std::fs::remove_file(d.join(new_name)).unwrap();
+        std::fs::remove_dir(&d).unwrap();
     }
 }
