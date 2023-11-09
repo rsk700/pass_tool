@@ -762,7 +762,7 @@ where
 
 /// Copy file into provided directory, if optional new name set file will be
 /// renamed
-struct CopyFile {
+pub struct CopyFile {
     file_path: PathBuf,
     target_dir: PathBuf,
     new_name: Option<OsString>,
