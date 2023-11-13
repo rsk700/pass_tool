@@ -829,6 +829,91 @@ where
     CopyFile::new(file_path.into(), target_dir.into(), Some(new_name.into())).into_action()
 }
 
+/// Changes current working directory to the provided one
+pub struct SetDir(PathBuf);
+
+impl SetDir {
+    const NAME: &'static str = "SetDir";
+
+    pub fn new(path: PathBuf) -> Self {
+        Self(path)
+    }
+}
+
+impl Action for SetDir {
+    fn name(&self) -> &str {
+        Self::NAME
+    }
+
+    fn run(&self) -> ActionResult {
+        if std::env::set_current_dir(&self.0).is_ok() {
+            ActionResult::Ok
+        } else {
+            ActionResult::Fail
+        }
+    }
+
+    fn into_action(self) -> Box<dyn Action> {
+        Box::new(self)
+    }
+}
+
+/// init [SetDir]
+pub fn set_dir<Dir>(dir: Dir) -> Box<dyn Action>
+where
+    Dir: Into<PathBuf>,
+{
+    SetDir(dir.into()).into_action()
+}
+
+/// Changes current working directory only for wrapped action, and revert back
+/// when wrapped action finishes
+pub struct DirContext {
+    path: PathBuf,
+    action: Box<dyn Action>,
+}
+
+impl DirContext {
+    const NAME: &str = "DirContext";
+
+    pub fn new(path: PathBuf, action: Box<dyn Action>) -> Self {
+        Self { path, action }
+    }
+}
+
+impl Action for DirContext {
+    fn name(&self) -> &str {
+        Self::NAME
+    }
+
+    fn run(&self) -> ActionResult {
+        let Ok(current_dir) = std::env::current_dir() else {
+            return ActionResult::Fail;
+        };
+        if std::env::set_current_dir(&self.path).is_err() {
+            return ActionResult::Fail;
+        }
+        let result = self.action.run();
+        if std::env::set_current_dir(current_dir).is_ok() {
+            result
+        } else {
+            ActionResult::Fail
+        }
+    }
+
+    fn into_action(self) -> Box<dyn Action> {
+        Box::new(self)
+    }
+}
+
+/// init [DirContext]
+pub fn dir_context<Dir>(path: Dir, action: Box<dyn Action>) -> Box<dyn Action>
+where
+    Dir: Into<PathBuf>,
+{
+    DirContext::new(path.into(), action).into_action()
+}
+
 /// implements [Action] for tuple with name and function
 impl<N, F> Action for (N, F)
 where
@@ -1022,7 +1107,7 @@ mod test {
 
     #[test]
     fn test_copy_file() {
-        let d: PathBuf = "/tmp/pass-test-dir-111222333".into();
+        let d: PathBuf = "/tmp/pass-test-dir-111222333-copy-file".into();
         let p = create_test_file("original_file");
         let p_path: PathBuf = p.clone().into();
         let p_name = p_path.file_name().unwrap();
@@ -1036,5 +1121,55 @@ mod test {
         std::fs::remove_file(d.join(p_name)).unwrap();
         std::fs::remove_file(d.join(new_name)).unwrap();
         std::fs::remove_dir(&d).unwrap();
+    }
+
+    #[test]
+    fn test_set_dir() {
+        let dir: PathBuf = "/tmp/pass-test-dir-111222333-set-dir".into();
+        std::fs::create_dir(&dir).unwrap();
+        let current = std::env::current_dir().unwrap();
+        assert_eq!(set_dir(&dir).run(), ActionResult::Ok);
+        assert_eq!(std::env::current_dir().unwrap(), dir);
+        assert_eq!(
+            set_dir("/aaaaaaaaaaaaaa/bbbbbbbbbbbbb/11111111111/error-path").run(),
+            ActionResult::Fail
+        );
+        std::env::set_current_dir(current).unwrap();
+        std::fs::remove_dir(dir).unwrap();
+    }
+
+    #[test]
+    fn test_dir_context() {
+        let dir: PathBuf = "/tmp/pass-test-dir-111222333-dir-context".into();
+        std::fs::create_dir(&dir).unwrap();
+        let current = std::env::current_dir().unwrap();
+        let dir_copy = dir.clone();
+        assert_eq!(
+            dir_context(
+                &dir,
+                ("test dir context", move || {
+                    if std::env::current_dir().unwrap() == dir_copy {
+                        ActionResult::Ok
+                    } else {
+                        ActionResult::Fail
+                    }
+                })
+                    .into_action()
+            )
+            .run(),
+            ActionResult::Ok
+        );
+        assert_ne!(std::env::current_dir().unwrap(), dir);
+        assert_eq!(std::env::current_dir().unwrap(), current);
+        assert_eq!(
+            dir_context(
+                "/aaaaaaaaaaaaaa/bbbbbbbbbbbbb/11111111111/error-path",
+                always_ok()
+            )
+            .run(),
+            ActionResult::Fail
+        );
+        std::fs::remove_dir(dir).unwrap();
+        assert_eq!(std::env::current_dir().unwrap(), current);
     }
 }
