@@ -4,6 +4,7 @@ use crate::{
     actions::{action, create_dir_perm, PathPermissions},
     checks::{check, is_dir},
     instruction,
+    interfaces::Action,
     playbook::Instruction,
 };
 
@@ -21,4 +22,11 @@ where
         create_dir_perm(&path, permissions),
     ))
     .confirm(check(format!("{path_name} directory"), is_dir(&path)))
+}
+
+pub fn named<Name>(name: Name, action_to_run: Box<dyn Action>) -> Instruction
+where
+    Name: Into<String>,
+{
+    instruction(action(name, action_to_run))
 }
