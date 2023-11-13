@@ -1,6 +1,6 @@
 [package]
 name = "pass_tool"
-version = "0.3.3"
+version = "0.3.4"
 authors = ["Roman Kudryavtsev <rskbox@gmail.com>"]
 license = "MIT"
 description = "Tool for system configuration intended for making automation scripts using Rust"
