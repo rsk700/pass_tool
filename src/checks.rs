@@ -270,38 +270,6 @@ where
     CanWrite::new(path.into()).into_check()
 }
 
-/// Negates another check
-pub struct NotOp {
-    check: Box<dyn Check>,
-}
-
-impl NotOp {
-    const NAME: &'static str = "NotOp";
-
-    pub fn new(check: Box<dyn Check>) -> Self {
-        Self { check }
-    }
-}
-
-impl Check for NotOp {
-    fn name(&self) -> &str {
-        Self::NAME
-    }
-
-    fn yes(&self) -> bool {
-        !self.check.yes()
-    }
-
-    fn into_check(self) -> Box<dyn Check> {
-        Box::new(self)
-    }
-}
-
-/// init [NotOp]
-pub fn not_op(check: Box<dyn Check>) -> Box<dyn Check> {
-    NotOp::new(check).into_check()
-}
-
 /// Checks if any of provided checks succeed
 pub struct OrOp {
     checks: Vec<Box<dyn Check>>,
@@ -778,11 +746,6 @@ mod test {
         assert!(can_write(&path).yes());
         delete_test_file(path);
         assert!(!can_write(NOT_A_FILE).yes());
-    }
-
-    #[test]
-    fn test_not_op() {
-        assert!(!not_op(always_yes()).yes());
     }
 
     #[test]

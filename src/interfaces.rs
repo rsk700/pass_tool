@@ -2,7 +2,12 @@ pub trait Check {
     /// Short name of [Check]
     fn name(&self) -> &str;
     /// Performs check and returns [true] in case of success, [false] - if check
-    /// negative or failed (eg. have not enough permission to perform check)
+    /// negative or failed (eg. have not enough permission to perform check).
+    /// Returned [true] value here is "stronger", for example if file checked
+    /// for some content, it possible file contains it, but check returns
+    /// [false] if not enough permission. Because of that there is no point in
+    /// negating check, for example it is incorrect to use `not(is_dir)` need to
+    /// use `path_is_missing`.
     fn yes(&self) -> bool;
     fn into_check(self) -> Box<dyn Check>;
 }
