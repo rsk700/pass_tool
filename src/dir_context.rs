@@ -118,58 +118,62 @@ mod test {
     use crate::{actions::always_ok, checks::always_yes};
 
     #[test]
-    fn test_dir_context_check() {
-        let dir_path: PathBuf = "/tmp/pass-test-dir-111222333-test_dir_context_check".into();
-        std::fs::create_dir(&dir_path).unwrap();
-        let current = std::env::current_dir().unwrap();
-        let dir_copy = dir_path.clone();
-        assert!(dir(&dir_path)
-            .check(
-                ("test dir context check", move || {
-                    std::env::current_dir().unwrap() == dir_copy
-                })
-                    .into_check()
-            )
-            .yes());
-        assert_ne!(std::env::current_dir().unwrap(), dir_path);
-        assert_eq!(std::env::current_dir().unwrap(), current);
-        assert!(!dir("/aaaaaaaaaaaaaa/bbbbbbbbbbbbb/11111111111/error-path")
-            .check(always_yes())
-            .yes());
-        std::fs::remove_dir(dir_path).unwrap();
-        assert_eq!(std::env::current_dir().unwrap(), current);
-    }
-
-    #[test]
-    fn test_dir_context_action() {
-        let dir_path: PathBuf = "/tmp/pass-test-dir-111222333-test_dir_context_action".into();
-        std::fs::create_dir(&dir_path).unwrap();
-        let current = std::env::current_dir().unwrap();
-        let dir_copy = dir_path.clone();
-        assert_eq!(
-            dir(&dir_path)
-                .action(
-                    ("test dir context action", move || {
-                        if std::env::current_dir().unwrap() == dir_copy {
-                            ActionResult::Ok
-                        } else {
-                            ActionResult::Fail
-                        }
+    fn test_dir_context() {
+        // all tests related to current directory should be run sequentially,
+        // because current directory is global for process
+        {
+            // test check dir context
+            let dir_path: PathBuf = "/tmp/pass-test-dir-111222333-test_dir_context_check".into();
+            std::fs::create_dir(&dir_path).unwrap();
+            let current = std::env::current_dir().unwrap();
+            let dir_copy = dir_path.clone();
+            assert!(dir(&dir_path)
+                .check(
+                    ("test dir context check", move || {
+                        std::env::current_dir().unwrap() == dir_copy
                     })
-                        .into_action()
+                        .into_check()
                 )
-                .run(),
-            ActionResult::Ok
-        );
-        assert_ne!(std::env::current_dir().unwrap(), dir_path);
-        assert_eq!(std::env::current_dir().unwrap(), current);
-        assert_eq!(
-            dir("/aaaaaaaaaaaaaa/bbbbbbbbbbbbb/11111111111/error-path")
-                .action(always_ok())
-                .run(),
-            ActionResult::Fail
-        );
-        std::fs::remove_dir(dir_path).unwrap();
-        assert_eq!(std::env::current_dir().unwrap(), current);
+                .yes());
+            assert_ne!(std::env::current_dir().unwrap(), dir_path);
+            assert_eq!(std::env::current_dir().unwrap(), current);
+            assert!(!dir("/aaaaaaaaaaaaaa/bbbbbbbbbbbbb/11111111111/error-path")
+                .check(always_yes())
+                .yes());
+            std::fs::remove_dir(dir_path).unwrap();
+            assert_eq!(std::env::current_dir().unwrap(), current);
+        }
+        {
+            // test action dir context
+            let dir_path: PathBuf = "/tmp/pass-test-dir-111222333-test_dir_context_action".into();
+            std::fs::create_dir(&dir_path).unwrap();
+            let current = std::env::current_dir().unwrap();
+            let dir_copy = dir_path.clone();
+            assert_eq!(
+                dir(&dir_path)
+                    .action(
+                        ("test dir context action", move || {
+                            if std::env::current_dir().unwrap() == dir_copy {
+                                ActionResult::Ok
+                            } else {
+                                ActionResult::Fail
+                            }
+                        })
+                            .into_action()
+                    )
+                    .run(),
+                ActionResult::Ok
+            );
+            assert_ne!(std::env::current_dir().unwrap(), dir_path);
+            assert_eq!(std::env::current_dir().unwrap(), current);
+            assert_eq!(
+                dir("/aaaaaaaaaaaaaa/bbbbbbbbbbbbb/11111111111/error-path")
+                    .action(always_ok())
+                    .run(),
+                ActionResult::Fail
+            );
+            std::fs::remove_dir(dir_path).unwrap();
+            assert_eq!(std::env::current_dir().unwrap(), current);
+        }
     }
 }

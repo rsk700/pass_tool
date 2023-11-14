@@ -1,7 +1,7 @@
 use crate::{
     interfaces::Check,
     process::{norm_cmd, run, ProcessOutput},
-    search::contains_once,
+    search::{contains, contains_once},
 };
 use nix::unistd::Uid;
 use std::{fs::OpenOptions, path::PathBuf};
@@ -382,7 +382,7 @@ where
     AndOp::new(checks.into()).into_check()
 }
 
-/// Checks if stdout output of command contains provided data exactly once
+/// Checks if stdout output of the command contains provided data exactly once
 pub struct StdoutContainsOnce {
     cmd: Vec<String>,
     data: Vec<u8>,
@@ -425,7 +425,7 @@ where
     StdoutContainsOnce::new(norm_cmd(cmd), data.into()).into_check()
 }
 
-/// Checks if stderr output of command contains provided data exactly once
+/// Checks if stderr output of the command contains provided data exactly once
 pub struct StderrContainsOnce {
     cmd: Vec<String>,
     data: Vec<u8>,
@@ -447,7 +447,7 @@ impl Check for StderrContainsOnce {
     fn yes(&self) -> bool {
         let result = run(&self.cmd);
         if let Some(ProcessOutput { stderr, .. }) = result.output {
-            contains_once(&stderr, &self.data)
+            contains_once(stderr, &self.data)
         } else {
             false
         }
@@ -466,6 +466,92 @@ where
     Data: Into<Vec<u8>>,
 {
     StderrContainsOnce::new(norm_cmd(cmd), data.into()).into_check()
+}
+
+/// Checks if stdout of the command contains no provided data
+pub struct StdoutLacks {
+    cmd: Vec<String>,
+    data: Vec<u8>,
+}
+
+impl StdoutLacks {
+    const NAME: &'static str = "StdoutLacks";
+
+    pub fn new(cmd: Vec<String>, data: Vec<u8>) -> Self {
+        Self { cmd, data }
+    }
+}
+
+impl Check for StdoutLacks {
+    fn name(&self) -> &str {
+        Self::NAME
+    }
+
+    fn yes(&self) -> bool {
+        let result = run(&self.cmd);
+        if let Some(ProcessOutput { stdout, .. }) = result.output {
+            !contains(stdout, &self.data)
+        } else {
+            false
+        }
+    }
+
+    fn into_check(self) -> Box<dyn Check> {
+        Box::new(self)
+    }
+}
+
+/// init [StdoutLacks]
+pub fn stdout_lacks<Cmd, Arg, Data>(cmd: Cmd, data: Data) -> Box<dyn Check>
+where
+    Arg: Into<String>,
+    Cmd: Into<Vec<Arg>>,
+    Data: Into<Vec<u8>>,
+{
+    StdoutLacks::new(norm_cmd(cmd), data.into()).into_check()
+}
+
+/// Checks if stderr of the command contains no provided data
+pub struct StderrLacks {
+    cmd: Vec<String>,
+    data: Vec<u8>,
+}
+
+impl StderrLacks {
+    const NAME: &'static str = "StderrLacks";
+
+    pub fn new(cmd: Vec<String>, data: Vec<u8>) -> Self {
+        Self { cmd, data }
+    }
+}
+
+impl Check for StderrLacks {
+    fn name(&self) -> &str {
+        Self::NAME
+    }
+
+    fn yes(&self) -> bool {
+        let result = run(&self.cmd);
+        if let Some(ProcessOutput { stderr, .. }) = result.output {
+            !contains(stderr, &self.data)
+        } else {
+            false
+        }
+    }
+
+    fn into_check(self) -> Box<dyn Check> {
+        Box::new(self)
+    }
+}
+
+/// init [StderrLacks]
+pub fn stderr_lacks<Cmd, Arg, Data>(cmd: Cmd, data: Data) -> Box<dyn Check>
+where
+    Arg: Into<String>,
+    Cmd: Into<Vec<Arg>>,
+    Data: Into<Vec<u8>>,
+{
+    StderrLacks::new(norm_cmd(cmd), data.into()).into_check()
 }
 
 /// Checks if file matches exactly with provided content
@@ -531,7 +617,7 @@ impl Check for FileContainsOnce {
 
     fn yes(&self) -> bool {
         if let Ok(file_content) = std::fs::read(&self.path) {
-            contains_once(&file_content, &self.data)
+            contains_once(file_content, &self.data)
         } else {
             false
         }
@@ -820,6 +906,21 @@ mod test {
         assert!(stderr_contains_once(["ls", NOT_A_FILE], "cannot access").yes());
         assert!(!stderr_contains_once(["ls", NOT_A_FILE], "c").yes());
         assert!(!stderr_contains_once(["ls", NOT_A_FILE], "11111111111111111").yes());
+    }
+
+    #[test]
+    fn test_stdout_lacks() {
+        assert!(stdout_lacks(["echo", "111222333"], "000").yes());
+        assert!(!stdout_lacks(["echo", "111222333"], "111").yes());
+        assert!(!stdout_lacks(["eeeeeeeeeeeeeeeeeeeeerrrrrr123"], "111").yes());
+    }
+
+    #[test]
+    fn test_stderr_lacks() {
+        let path = "/tmp/not-a-pass-test-file-5555555555-111222333-test_stderr_lacks";
+        assert!(stderr_lacks(["ls", path], "000").yes());
+        assert!(!stderr_lacks(["ls", path], "111").yes());
+        assert!(!stderr_lacks(["eeeeeeeeeeeeeeeeeerrrrrrrrrrrrrrrrrr123"], "111").yes());
     }
 
     #[test]

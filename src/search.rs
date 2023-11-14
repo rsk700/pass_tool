@@ -15,6 +15,17 @@ where
     }
 }
 
+pub fn contains<Data, Pattern, T>(data: Data, pattern: Pattern) -> bool
+where
+    Data: AsRef<[T]>,
+    Pattern: AsRef<[T]>,
+    T: PartialEq,
+{
+    let data = data.as_ref();
+    let pattern = pattern.as_ref();
+    find_pattern(data, pattern).is_some()
+}
+
 pub fn find_pattern<Data, Pattern, T>(data: Data, pattern: Pattern) -> Option<usize>
 where
     Data: AsRef<[T]>,
