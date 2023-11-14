@@ -3,7 +3,9 @@ use pass_tool::{
         action, command, create_dir_perm, delete_file, install_apt_packages, many, perm,
         start_service, stop_service, write_file, write_file_perm,
     },
-    checks::{check, is_file, not_op, service_is_inactive, stdout_contains_once, user_is_root},
+    checks::{
+        check, is_file, path_is_missing, service_is_inactive, stdout_contains_once, user_is_root,
+    },
     instruction, run_cli_with_input, Playbook,
 };
 
@@ -104,7 +106,7 @@ fn main() {
                     ))
                     .confirm(check(
                         "Default nginx site deleted",
-                        not_op(is_file("/etc/nginx/sites-enabled/default")),
+                        path_is_missing("/etc/nginx/sites-enabled/default"),
                     )),
                     instruction(action(
                         "Create pass demo site nginx configuration",

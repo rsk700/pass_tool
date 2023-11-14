@@ -270,6 +270,44 @@ where
     CanWrite::new(path.into()).into_check()
 }
 
+/// Checks if provided path is missing (no such file or directory)
+pub struct PathIsMissing(PathBuf);
+
+impl PathIsMissing {
+    const NAME: &'static str = "PathIsMissing";
+
+    pub fn new(path: PathBuf) -> Self {
+        Self(path)
+    }
+}
+
+impl Check for PathIsMissing {
+    fn name(&self) -> &str {
+        Self::NAME
+    }
+
+    fn yes(&self) -> bool {
+        if let Ok(y) = self.0.try_exists() {
+            !y
+        } else {
+            // check failed, not possible to answer if path is missing
+            false
+        }
+    }
+
+    fn into_check(self) -> Box<dyn Check> {
+        Box::new(self)
+    }
+}
+
+/// init [PathIsMissing]
+pub fn path_is_missing<P>(path: P) -> Box<dyn Check>
+where
+    P: Into<PathBuf>,
+{
+    PathIsMissing::new(path.into()).into_check()
+}
+
 /// Checks if any of provided checks succeed
 pub struct OrOp {
     checks: Vec<Box<dyn Check>>,
@@ -746,6 +784,12 @@ mod test {
         assert!(can_write(&path).yes());
         delete_test_file(path);
         assert!(!can_write(NOT_A_FILE).yes());
+    }
+
+    #[test]
+    fn test_path_is_missing() {
+        assert!(path_is_missing("/tmp111111111111111122222222222").yes());
+        assert!(!path_is_missing("/tmp").yes());
     }
 
     #[test]
