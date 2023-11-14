@@ -115,7 +115,10 @@ impl Action for DirContextAction {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::{actions::always_ok, checks::always_yes};
+    use crate::{
+        actions::{always_ok, set_dir},
+        checks::always_yes,
+    };
 
     #[test]
     fn test_dir_context() {
@@ -174,6 +177,19 @@ mod test {
             );
             std::fs::remove_dir(dir_path).unwrap();
             assert_eq!(std::env::current_dir().unwrap(), current);
+        }
+        {
+            let dir: PathBuf = "/tmp/pass-test-dir-111222333-set-dir".into();
+            std::fs::create_dir(&dir).unwrap();
+            let current = std::env::current_dir().unwrap();
+            assert_eq!(set_dir(&dir).run(), ActionResult::Ok);
+            assert_eq!(std::env::current_dir().unwrap(), dir);
+            assert_eq!(
+                set_dir("/aaaaaaaaaaaaaa/bbbbbbbbbbbbb/11111111111/error-path").run(),
+                ActionResult::Fail
+            );
+            std::env::set_current_dir(current).unwrap();
+            std::fs::remove_dir(dir).unwrap();
         }
     }
 }

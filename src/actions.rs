@@ -866,6 +866,44 @@ where
     SetDir(dir.into()).into_action()
 }
 
+/// Wait until provided file appears on disk (can be used for some type of
+/// synchronization)
+pub struct WaitForFile(PathBuf);
+
+impl WaitForFile {
+    const NAME: &'static str = "WaitForFile";
+
+    pub fn new(path: PathBuf) -> Self {
+        Self(path)
+    }
+}
+
+impl Action for WaitForFile {
+    fn name(&self) -> &str {
+        Self::NAME
+    }
+
+    fn run(&self) -> ActionResult {
+        while !self.0.is_file() {
+            std::thread::sleep(std::time::Duration::from_secs(1));
+        }
+        std::thread::sleep(std::time::Duration::from_secs(1));
+        ActionResult::Ok
+    }
+
+    fn into_action(self) -> Box<dyn Action> {
+        Box::new(self)
+    }
+}
+
+/// inits [WaitForFile]
+pub fn wait_for_file<P>(path: P) -> Box<dyn Action>
+where
+    P: Into<PathBuf>,
+{
+    WaitForFile::new(path.into()).into_action()
+}
+
 /// implements [Action] for tuple with name and function
 impl<N, F> Action for (N, F)
 where
@@ -887,6 +925,8 @@ where
 
 #[cfg(test)]
 mod test {
+    use std::time::{Duration, Instant};
+
     use super::*;
 
     const NOT_A_FILE: &str = "/tmp/not-a-pass-test-file-5555555555";
@@ -1077,16 +1117,20 @@ mod test {
 
     #[test]
     fn test_set_dir() {
-        let dir: PathBuf = "/tmp/pass-test-dir-111222333-set-dir".into();
-        std::fs::create_dir(&dir).unwrap();
-        let current = std::env::current_dir().unwrap();
-        assert_eq!(set_dir(&dir).run(), ActionResult::Ok);
-        assert_eq!(std::env::current_dir().unwrap(), dir);
-        assert_eq!(
-            set_dir("/aaaaaaaaaaaaaa/bbbbbbbbbbbbb/11111111111/error-path").run(),
-            ActionResult::Fail
-        );
-        std::env::set_current_dir(current).unwrap();
-        std::fs::remove_dir(dir).unwrap();
+        // tested in dir_context.rs
+    }
+
+    #[test]
+    fn test_wait_for_file() {
+        let path: &'static str = "/tmp/pass-test-file-111222333-test_wait_for_file";
+        let time_a = Instant::now();
+        std::thread::spawn(move || {
+            std::thread::sleep(Duration::from_secs(4));
+            std::fs::write(path, "").unwrap();
+        });
+        assert_eq!(wait_for_file(path).run(), ActionResult::Ok);
+        let time_b = Instant::now();
+        std::fs::remove_file(path).unwrap();
+        assert!((time_b - time_a).as_secs_f32() >= 4.0);
     }
 }
