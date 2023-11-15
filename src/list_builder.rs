@@ -24,9 +24,9 @@ impl<T> ListBuilder<T> {
 
     /// Optionally adds item to the list if value is provided, item calculated
     /// from passed function
-    pub fn optional<V, F>(mut self, value: Option<V>, get_item: F) -> Self
+    pub fn optional<V, F>(mut self, value: &Option<V>, get_item: F) -> Self
     where
-        F: Fn(V) -> T,
+        F: Fn(&V) -> T,
     {
         if let Some(v) = value {
             self.push(get_item(v));
@@ -70,8 +70,8 @@ mod test {
     fn test_list_builder() {
         let b = list([1, 2])
             .list([1])
-            .optional(None, |v| v)
-            .optional(Some(10), |v| v);
+            .optional(&None, |v| *v)
+            .optional(&Some(10), |v| *v);
         assert_eq!(b.to_vec(), vec![1, 2, 1, 10]);
     }
 }
