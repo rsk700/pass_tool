@@ -1,9 +1,9 @@
 /// Checks if pattern appears once in data (without overlapping, `true` for "aa"
 /// inside "aaa"), will report `false` if pattern is empty
-pub fn contains_once<Data, Pattern, T>(data: Data, pattern: Pattern) -> bool
+pub fn contains_once<D, P, T>(data: D, pattern: P) -> bool
 where
-    Data: AsRef<[T]>,
-    Pattern: AsRef<[T]>,
+    D: AsRef<[T]>,
+    P: AsRef<[T]>,
     T: PartialEq,
 {
     let data = data.as_ref();
@@ -15,10 +15,10 @@ where
     }
 }
 
-pub fn contains<Data, Pattern, T>(data: Data, pattern: Pattern) -> bool
+pub fn contains<D, P, T>(data: D, pattern: P) -> bool
 where
-    Data: AsRef<[T]>,
-    Pattern: AsRef<[T]>,
+    D: AsRef<[T]>,
+    P: AsRef<[T]>,
     T: PartialEq,
 {
     let data = data.as_ref();

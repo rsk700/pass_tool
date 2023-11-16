@@ -1,7 +1,7 @@
 use crate::{
     interfaces::Check,
+    pattern::Pattern,
     process::{norm_cmd, run, ProcessOutput},
-    search::{contains, contains_once},
 };
 use nix::unistd::Uid;
 use std::{fs::OpenOptions, path::PathBuf};
@@ -382,17 +382,18 @@ where
     AndOp::new(checks.into()).into_check()
 }
 
-/// Checks if stdout output of the command contains provided data exactly once
+/// Checks if stdout output of the command contains provided pattern exactly
+/// once
 pub struct StdoutContainsOnce {
     cmd: Vec<String>,
-    data: Vec<u8>,
+    pattern: Pattern,
 }
 
 impl StdoutContainsOnce {
     const NAME: &'static str = "StdoutContainsOnce";
 
-    pub fn new(cmd: Vec<String>, data: Vec<u8>) -> Self {
-        Self { cmd, data }
+    pub fn new(cmd: Vec<String>, pattern: Pattern) -> Self {
+        Self { cmd, pattern }
     }
 }
 
@@ -404,7 +405,7 @@ impl Check for StdoutContainsOnce {
     fn yes(&self) -> bool {
         let result = run(&self.cmd);
         if let Some(ProcessOutput { stdout, .. }) = result.output {
-            contains_once(stdout, &self.data)
+            self.pattern.contains_once(&stdout).unwrap_or_default()
         } else {
             false
         }
@@ -416,26 +417,26 @@ impl Check for StdoutContainsOnce {
 }
 
 /// init [StdoutContainsOnce]
-pub fn stdout_contains_once<Cmd, Arg, Data>(cmd: Cmd, data: Data) -> Box<dyn Check>
+pub fn stdout_contains_once<TCmd, TArg, TPattern>(cmd: TCmd, pattern: TPattern) -> Box<dyn Check>
 where
-    Arg: Into<String>,
-    Cmd: Into<Vec<Arg>>,
-    Data: Into<Vec<u8>>,
+    TArg: Into<String>,
+    TCmd: Into<Vec<TArg>>,
+    TPattern: Into<Pattern>,
 {
-    StdoutContainsOnce::new(norm_cmd(cmd), data.into()).into_check()
+    StdoutContainsOnce::new(norm_cmd(cmd), pattern.into()).into_check()
 }
 
-/// Checks if stderr output of the command contains provided data exactly once
+/// Checks if stderr output of the command contains provided pattern exactly once
 pub struct StderrContainsOnce {
     cmd: Vec<String>,
-    data: Vec<u8>,
+    pattern: Pattern,
 }
 
 impl StderrContainsOnce {
     const NAME: &'static str = "StderrContainsOnce";
 
-    pub fn new(cmd: Vec<String>, data: Vec<u8>) -> Self {
-        Self { cmd, data }
+    pub fn new(cmd: Vec<String>, pattern: Pattern) -> Self {
+        Self { cmd, pattern }
     }
 }
 
@@ -447,7 +448,7 @@ impl Check for StderrContainsOnce {
     fn yes(&self) -> bool {
         let result = run(&self.cmd);
         if let Some(ProcessOutput { stderr, .. }) = result.output {
-            contains_once(stderr, &self.data)
+            self.pattern.contains_once(&stderr).unwrap_or_default()
         } else {
             false
         }
@@ -459,26 +460,26 @@ impl Check for StderrContainsOnce {
 }
 
 /// init [StderrContainsOnce]
-pub fn stderr_contains_once<Cmd, Arg, Data>(cmd: Cmd, data: Data) -> Box<dyn Check>
+pub fn stderr_contains_once<TCmd, TArg, TPattern>(cmd: TCmd, pattern: TPattern) -> Box<dyn Check>
 where
-    Arg: Into<String>,
-    Cmd: Into<Vec<Arg>>,
-    Data: Into<Vec<u8>>,
+    TArg: Into<String>,
+    TCmd: Into<Vec<TArg>>,
+    TPattern: Into<Pattern>,
 {
-    StderrContainsOnce::new(norm_cmd(cmd), data.into()).into_check()
+    StderrContainsOnce::new(norm_cmd(cmd), pattern.into()).into_check()
 }
 
-/// Checks if stdout of the command contains no provided data
+/// Checks if stdout of the command contains no provided pattern
 pub struct StdoutLacks {
     cmd: Vec<String>,
-    data: Vec<u8>,
+    pattern: Pattern,
 }
 
 impl StdoutLacks {
     const NAME: &'static str = "StdoutLacks";
 
-    pub fn new(cmd: Vec<String>, data: Vec<u8>) -> Self {
-        Self { cmd, data }
+    pub fn new(cmd: Vec<String>, pattern: Pattern) -> Self {
+        Self { cmd, pattern }
     }
 }
 
@@ -490,7 +491,10 @@ impl Check for StdoutLacks {
     fn yes(&self) -> bool {
         let result = run(&self.cmd);
         if let Some(ProcessOutput { stdout, .. }) = result.output {
-            !contains(stdout, &self.data)
+            self.pattern
+                .contains(&stdout)
+                .map(|y| !y)
+                .unwrap_or_default()
         } else {
             false
         }
@@ -502,26 +506,26 @@ impl Check for StdoutLacks {
 }
 
 /// init [StdoutLacks]
-pub fn stdout_lacks<Cmd, Arg, Data>(cmd: Cmd, data: Data) -> Box<dyn Check>
+pub fn stdout_lacks<TCmd, TArg, TPattern>(cmd: TCmd, pattern: TPattern) -> Box<dyn Check>
 where
-    Arg: Into<String>,
-    Cmd: Into<Vec<Arg>>,
-    Data: Into<Vec<u8>>,
+    TArg: Into<String>,
+    TCmd: Into<Vec<TArg>>,
+    TPattern: Into<Pattern>,
 {
-    StdoutLacks::new(norm_cmd(cmd), data.into()).into_check()
+    StdoutLacks::new(norm_cmd(cmd), pattern.into()).into_check()
 }
 
-/// Checks if stderr of the command contains no provided data
+/// Checks if stderr of the command contains no provided pattern
 pub struct StderrLacks {
     cmd: Vec<String>,
-    data: Vec<u8>,
+    pattern: Pattern,
 }
 
 impl StderrLacks {
     const NAME: &'static str = "StderrLacks";
 
-    pub fn new(cmd: Vec<String>, data: Vec<u8>) -> Self {
-        Self { cmd, data }
+    pub fn new(cmd: Vec<String>, pattern: Pattern) -> Self {
+        Self { cmd, pattern }
     }
 }
 
@@ -533,7 +537,10 @@ impl Check for StderrLacks {
     fn yes(&self) -> bool {
         let result = run(&self.cmd);
         if let Some(ProcessOutput { stderr, .. }) = result.output {
-            !contains(stderr, &self.data)
+            self.pattern
+                .contains(&stderr)
+                .map(|y| !y)
+                .unwrap_or_default()
         } else {
             false
         }
@@ -545,13 +552,13 @@ impl Check for StderrLacks {
 }
 
 /// init [StderrLacks]
-pub fn stderr_lacks<Cmd, Arg, Data>(cmd: Cmd, data: Data) -> Box<dyn Check>
+pub fn stderr_lacks<TCmd, TArg, TPattern>(cmd: TCmd, pattern: TPattern) -> Box<dyn Check>
 where
-    Arg: Into<String>,
-    Cmd: Into<Vec<Arg>>,
-    Data: Into<Vec<u8>>,
+    TArg: Into<String>,
+    TCmd: Into<Vec<TArg>>,
+    TPattern: Into<Pattern>,
 {
-    StderrLacks::new(norm_cmd(cmd), data.into()).into_check()
+    StderrLacks::new(norm_cmd(cmd), pattern.into()).into_check()
 }
 
 /// Checks if file matches exactly with provided content
@@ -596,17 +603,17 @@ where
     IsFileContent::new(path.into(), content.into()).into_check()
 }
 
-/// Checks if file contains provided data exactly once
+/// Checks if file contains provided pattern exactly once
 pub struct FileContainsOnce {
     path: PathBuf,
-    data: Vec<u8>,
+    pattern: Pattern,
 }
 
 impl FileContainsOnce {
     const NAME: &'static str = "FileContainsOnce";
 
-    pub fn new(path: PathBuf, data: Vec<u8>) -> Self {
-        Self { path, data }
+    pub fn new(path: PathBuf, pattern: Pattern) -> Self {
+        Self { path, pattern }
     }
 }
 
@@ -617,7 +624,9 @@ impl Check for FileContainsOnce {
 
     fn yes(&self) -> bool {
         if let Ok(file_content) = std::fs::read(&self.path) {
-            contains_once(file_content, &self.data)
+            self.pattern
+                .contains_once(&file_content)
+                .unwrap_or_default()
         } else {
             false
         }
@@ -629,10 +638,10 @@ impl Check for FileContainsOnce {
 }
 
 /// init [FileContainsOnce]
-pub fn file_contains_once<FilePath, Data>(path: FilePath, data: Data) -> Box<dyn Check>
+pub fn file_contains_once<TPath, TPattern>(path: TPath, data: TPattern) -> Box<dyn Check>
 where
-    FilePath: Into<PathBuf>,
-    Data: Into<Vec<u8>>,
+    TPath: Into<PathBuf>,
+    TPattern: Into<Pattern>,
 {
     FileContainsOnce::new(path.into(), data.into()).into_check()
 }
@@ -797,6 +806,7 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::pattern::re;
     use std::path::Path;
 
     const NOT_A_FILE: &str = "/tmp/not-a-pass-test-file-5555555555";
@@ -899,6 +909,8 @@ mod test {
         assert!(stdout_contains_once(["echo", "111222333"], "23").yes());
         assert!(!stdout_contains_once(["echo", "1112222"], "22").yes());
         assert!(!stdout_contains_once(["echo", "1112222"], "44").yes());
+        assert!(stdout_contains_once(["echo", "111222333"], re("1.2")).yes());
+        assert!(!stdout_contains_once(["echo", "111222333"], re("1.")).yes());
     }
 
     #[test]
@@ -906,6 +918,13 @@ mod test {
         assert!(stderr_contains_once(["ls", NOT_A_FILE], "cannot access").yes());
         assert!(!stderr_contains_once(["ls", NOT_A_FILE], "c").yes());
         assert!(!stderr_contains_once(["ls", NOT_A_FILE], "11111111111111111").yes());
+        assert!(
+            stderr_contains_once(["ls", "/tmp/not-a-pass-test-file-1111222333"], re("1.2{3}"))
+                .yes()
+        );
+        assert!(
+            !stderr_contains_once(["ls", "/tmp/not-a-pass-test-file-1111222333"], re("1{2}")).yes()
+        );
     }
 
     #[test]
@@ -913,6 +932,8 @@ mod test {
         assert!(stdout_lacks(["echo", "111222333"], "000").yes());
         assert!(!stdout_lacks(["echo", "111222333"], "111").yes());
         assert!(!stdout_lacks(["eeeeeeeeeeeeeeeeeeeeerrrrrr123"], "111").yes());
+        assert!(stdout_lacks(["echo", "111222333"], re("1{4}")).yes());
+        assert!(!stdout_lacks(["echo", "111222333"], re("1{3}")).yes());
     }
 
     #[test]
@@ -921,6 +942,8 @@ mod test {
         assert!(stderr_lacks(["ls", path], "000").yes());
         assert!(!stderr_lacks(["ls", path], "111").yes());
         assert!(!stderr_lacks(["eeeeeeeeeeeeeeeeeerrrrrrrrrrrrrrrrrr123"], "111").yes());
+        assert!(stderr_lacks(["ls", path], re("1{4}")).yes());
+        assert!(!stderr_lacks(["ls", path], re("1{3}")).yes());
     }
 
     #[test]
@@ -936,6 +959,8 @@ mod test {
         let path = create_test_file("file_contains_once");
         assert!(file_contains_once(&path, "bbb").yes());
         assert!(!file_contains_once(&path, "b").yes());
+        assert!(file_contains_once(&path, re("a.ab{3}")).yes());
+        assert!(!file_contains_once(&path, re("a.")).yes());
         delete_test_file(&path);
     }
 

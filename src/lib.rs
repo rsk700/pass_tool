@@ -6,6 +6,7 @@ pub mod dir_context;
 pub mod instructions;
 pub mod interfaces;
 pub mod list_builder;
+pub mod pattern;
 pub mod playbook;
 pub mod process;
 pub mod search;
