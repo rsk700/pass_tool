@@ -7,8 +7,8 @@ use std::{
 
 use crate::{
     interfaces::{Action, ActionResult},
+    pattern::Pattern,
     process::{norm_cmd, run},
-    search::find_pattern,
 };
 
 /// Action which does nothing and always succeeds
@@ -553,22 +553,22 @@ where
     .into_action()
 }
 
-/// Replaces target pattern in file with new data exactly once, will fail if
-/// file contains target pattern multiple times
+/// Replaces provided pattern in file with new data exactly once, will fail if
+/// file contains pattern multiple times or no pattern at all
 pub struct ReplaceInFileOnce {
     path: PathBuf,
-    target: Vec<u8>,
-    new_data: Vec<u8>,
+    pattern: Pattern,
+    replacement: Vec<u8>,
 }
 
 impl ReplaceInFileOnce {
     const NAME: &'static str = "ReplaceInFileOnce";
 
-    pub fn new(path: PathBuf, target: Vec<u8>, new_data: Vec<u8>) -> Self {
+    pub fn new(path: PathBuf, pattern: Pattern, replacement: Vec<u8>) -> Self {
         Self {
             path,
-            target,
-            new_data,
+            pattern,
+            replacement,
         }
     }
 }
@@ -579,28 +579,16 @@ impl Action for ReplaceInFileOnce {
     }
 
     fn run(&self) -> ActionResult {
-        if let Ok(c) = std::fs::read(&self.path) {
-            if let Some(i) = find_pattern(&c, &self.target) {
-                if find_pattern(&c[i + self.target.len()..], &self.target).is_some() {
-                    // found second entry of target, but expecting to have it only once in file
-                    return ActionResult::Fail;
-                }
-                let new_content: Vec<u8> = c[0..i]
-                    .iter()
-                    .copied()
-                    .chain(self.new_data.iter().copied())
-                    .chain(c[i + self.target.len()..].iter().copied())
-                    .collect();
-                if std::fs::write(&self.path, new_content).is_err() {
-                    ActionResult::Fail
-                } else {
-                    ActionResult::Ok
-                }
-            } else {
-                ActionResult::Fail
-            }
-        } else {
+        let Some(new_content) = std::fs::read(&self.path)
+            .ok()
+            .and_then(|c| self.pattern.replace_once(&c, &self.replacement))
+        else {
+            return ActionResult::Fail;
+        };
+        if std::fs::write(&self.path, new_content).is_err() {
             ActionResult::Fail
+        } else {
+            ActionResult::Ok
         }
     }
 
@@ -610,16 +598,17 @@ impl Action for ReplaceInFileOnce {
 }
 
 /// init [ReplaceInFileOnce]
-pub fn replace_in_file_once<FilePath, Data>(
-    path: FilePath,
-    target: Data,
-    new_data: Data,
+pub fn replace_in_file_once<TPath, TPattern, TData>(
+    path: TPath,
+    pattern: TPattern,
+    replacement: TData,
 ) -> Box<dyn Action>
 where
-    FilePath: Into<PathBuf>,
-    Data: Into<Vec<u8>>,
+    TPath: Into<PathBuf>,
+    TPattern: Into<Pattern>,
+    TData: Into<Vec<u8>>,
 {
-    ReplaceInFileOnce::new(path.into(), target.into(), new_data.into()).into_action()
+    ReplaceInFileOnce::new(path.into(), pattern.into(), replacement.into()).into_action()
 }
 
 /// Rename file or directory
@@ -925,9 +914,9 @@ where
 
 #[cfg(test)]
 mod test {
-    use std::time::{Duration, Instant};
-
     use super::*;
+    use crate::pattern::re;
+    use std::time::{Duration, Instant};
 
     const NOT_A_FILE: &str = "/tmp/not-a-pass-test-file-5555555555";
 
@@ -1046,6 +1035,24 @@ mod test {
                 ActionResult::Fail
             );
             assert_eq!(std::fs::read(&p).unwrap(), "aaabbbccc".as_bytes());
+            std::fs::remove_file(&p).unwrap();
+        }
+        // regex
+        {
+            let p = create_test_file("test_replace_in_file_once");
+            assert_eq!(
+                replace_in_file_once(&p, re("a+"), "1").run(),
+                ActionResult::Ok
+            );
+            assert_eq!(std::fs::read(&p).unwrap(), "1bbbccc".as_bytes());
+            std::fs::remove_file(&p).unwrap();
+        }
+        {
+            let p = create_test_file("test_replace_in_file_once");
+            assert_eq!(
+                replace_in_file_once(&p, re("a."), "1").run(),
+                ActionResult::Fail
+            );
             std::fs::remove_file(&p).unwrap();
         }
     }
