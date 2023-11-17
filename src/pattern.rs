@@ -2,6 +2,7 @@ use regex::Regex;
 
 use crate::search::{contains, contains_once, find_pattern_iter};
 
+#[derive(Clone)]
 pub enum Pattern {
     Bin(Vec<u8>),
     Regex(Regex),
