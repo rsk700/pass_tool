@@ -41,7 +41,7 @@ pub struct DirContextCheck {
 }
 
 impl DirContextCheck {
-    const NAME: &str = "DirContext";
+    const NAME: &'static str = "DirContext";
 
     pub fn new(path: PathBuf, check: Box<dyn Check>) -> Self {
         Self { path, check }
@@ -80,7 +80,7 @@ pub struct DirContextAction {
 }
 
 impl DirContextAction {
-    const NAME: &str = "DirContext";
+    const NAME: &'static str = "DirContext";
 
     pub fn new(path: PathBuf, action: Box<dyn Action>) -> Self {
         Self { path, action }
