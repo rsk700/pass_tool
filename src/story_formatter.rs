@@ -1,3 +1,4 @@
+use std::io::Write;
 use terminal_size::{terminal_size, Width};
 
 fn name_ok_fail(flag: bool) -> &'static str {
@@ -185,6 +186,8 @@ impl StoryFormatter {
         self.push(title);
         self.section_process();
         print!("...applying");
+        // trying to flush, but not hard, ignoring if error
+        let _ = std::io::stdout().flush();
         let result = process_fn(self);
         let result_name = if result.is_ok() {
             "...done!"
