@@ -1,7 +1,7 @@
 use crate::{
     interfaces::Check,
     pattern::Pattern,
-    process::{norm_cmd, run, ProcessOutput},
+    process::{norm_cmd, run, ExitCode, ProcessOutput},
 };
 use nix::unistd::Uid;
 use std::{fs::OpenOptions, path::PathBuf};
@@ -561,6 +561,61 @@ where
     StderrLacks::new(norm_cmd(cmd), pattern.into()).into_check()
 }
 
+/// Checks if command returns provided [ExitCode] after execution
+pub struct IsExitCode {
+    cmd: Vec<String>,
+    exit_code: ExitCode,
+}
+
+impl IsExitCode {
+    const NAME: &'static str = "IsExitCode";
+
+    pub fn new(cmd: Vec<String>, exit_code: ExitCode) -> Self {
+        Self { cmd, exit_code }
+    }
+}
+
+impl Check for IsExitCode {
+    fn name(&self) -> &str {
+        Self::NAME
+    }
+
+    fn yes(&self) -> bool {
+        run(&self.cmd).code == self.exit_code
+    }
+
+    fn into_check(self) -> Box<dyn Check> {
+        Box::new(self)
+    }
+}
+
+/// init [IsExitCode], checks if exit code is [ExitCode::SuccessOnExit]
+pub fn command_ok<TCmd, TArg>(cmd: TCmd) -> Box<dyn Check>
+where
+    TArg: Into<String>,
+    TCmd: Into<Vec<TArg>>,
+{
+    IsExitCode::new(norm_cmd(cmd), ExitCode::SuccessOnExit).into_check()
+}
+
+/// init [IsExitCode], checks if exit code is [ExitCode::ErrorOnExit]
+pub fn command_err<TCmd, TArg>(cmd: TCmd) -> Box<dyn Check>
+where
+    TArg: Into<String>,
+    TCmd: Into<Vec<TArg>>,
+{
+    IsExitCode::new(norm_cmd(cmd), ExitCode::ErrorOnExit).into_check()
+}
+
+/// init [IsExitCode], checks if exit code is [ExitCode::FailOnStart]
+pub fn command_fail<TCmd, TArg>(cmd: TCmd) -> Box<dyn Check>
+where
+    TArg: Into<String>,
+    TCmd: Into<Vec<TArg>>,
+{
+    IsExitCode::new(norm_cmd(cmd), ExitCode::FailOnStart).into_check()
+}
+
 /// Checks if file matches exactly with provided content
 pub struct IsFileContent {
     path: PathBuf,
@@ -944,6 +999,13 @@ mod test {
         assert!(!stderr_lacks(["eeeeeeeeeeeeeeeeeerrrrrrrrrrrrrrrrrr123"], "111").yes());
         assert!(stderr_lacks(["ls", path], re("1{4}")).yes());
         assert!(!stderr_lacks(["ls", path], re("1{3}")).yes());
+    }
+
+    #[test]
+    fn test_is_exit_code() {
+        assert!(command_ok(["/bin/true"]).yes());
+        assert!(command_err(["/bin/false"]).yes());
+        assert!(command_fail(["/bin/command-which-does-not-exist-5kGHx7FDlwolHKpmJQim9X"]).yes());
     }
 
     #[test]
